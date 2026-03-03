@@ -1,4 +1,4 @@
-⚙️ HEALTH-AI: Local Setup Guide (Skeleton)
+HEALTH-AI: Local Setup Guide (Skeleton)
 This document provides the necessary steps to set up the HEALTH-AI project locally for development and testing.
 
 Prerequisites
