@@ -1,4 +1,4 @@
-#HEALTH-AI: Local Setup Guide (Skeleton)
+⚙️ HEALTH-AI: Local Setup Guide (Skeleton)
 This document provides the necessary steps to set up the HEALTH-AI project locally for development and testing.
 
 Prerequisites
@@ -13,6 +13,7 @@ Git
 1. Backend Setup (FastAPI & scikit-learn)
 Navigate to the backend directory and set up the Python environment:
 
+Bash
 # Navigate to backend folder
 cd backend
 
@@ -34,6 +35,7 @@ API Documentation (Swagger UI) will be available at: http://localhost:8000/docs
 2. Frontend Setup (React 18 + Vite)
 Navigate to the frontend directory and run the development server:
 
+Bash
 # Navigate to frontend folder
 cd frontend
 
@@ -42,5 +44,4 @@ npm install
 
 # Start the Vite development server
 npm run dev
-
 The React frontend will be available at: http://localhost:5173
