@@ -1,9 +1,21 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import App from '../../App';
 import useAppStore from '../../stores/useAppStore';
 import useDataStore from '../../stores/useDataStore';
+
+// Mock API calls used by components rendered in App
+vi.mock('../../api', () => ({
+  fetchClinicalContext: vi.fn(() => Promise.resolve({ data: null, error: 'mocked' })),
+  uploadCsv: vi.fn(() => Promise.resolve({ data: null, error: null })),
+  saveColumnMapping: vi.fn(() => Promise.resolve({ data: { schema_ok: true }, error: null })),
+  fetchPrepOptions: vi.fn(() => Promise.resolve({ data: null, error: 'mocked' })),
+  clearSessionId: vi.fn(),
+}));
+vi.mock('../../api/client', () => ({
+  getSessionId: vi.fn(() => null),
+}));
 
 describe('Step gating — Column Mapper gates Step 3', () => {
   beforeEach(() => {

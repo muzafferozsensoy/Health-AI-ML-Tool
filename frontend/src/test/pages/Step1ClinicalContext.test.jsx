@@ -1,9 +1,14 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import Step1ClinicalContext from '../../pages/Step1ClinicalContext/Step1ClinicalContext';
 import useAppStore from '../../stores/useAppStore';
 import useDataStore from '../../stores/useDataStore';
 import { domains } from '../../data/domains';
+
+// Mock the API so backend calls don't interfere with tests
+vi.mock('../../api', () => ({
+  fetchClinicalContext: vi.fn(() => Promise.resolve({ data: null, error: 'mocked' })),
+}));
 
 describe('Step1ClinicalContext — all 20 domains', () => {
   beforeEach(() => {

@@ -5,6 +5,11 @@ import PipelineConfig from '../../components/PipelineConfig/PipelineConfig';
 import useDataStore from '../../stores/useDataStore';
 import useAppStore from '../../stores/useAppStore';
 
+// Mock the API so fetchPrepOptions doesn't hit a real backend
+vi.mock('../../api', () => ({
+  fetchPrepOptions: vi.fn(() => Promise.resolve({ data: null, error: 'mocked' })),
+}));
+
 describe('PipelineConfig', () => {
   let onApplyMock;
 
@@ -26,24 +31,24 @@ describe('PipelineConfig', () => {
       mapperSaved: true,
       mapperOpen: false,
       pipelineConfig: {
-        imputation: 'median',
-        scaling: 'standard',
-        outlierHandling: 'clip',
-        featureSelection: 'all',
+        imputation: 'mean',
+        scaling: 'minmax',
         trainTestSplit: 80,
+        smote: false,
       },
       pipelineStatus: 'idle',
       pipelineProgress: 0,
       pipelineLogs: [],
       pipelineDuration: null,
+      prepOptions: null,
     });
   });
 
-  it('renders imputation dropdown with 4 options, default is median', () => {
+  it('renders imputation dropdown with 4 options, default is mean', () => {
     render(<PipelineConfig onApply={onApplyMock} />);
 
     const imputationSelect = screen.getByLabelText(/missing value imputation/i);
-    expect(imputationSelect.value).toBe('median');
+    expect(imputationSelect.value).toBe('mean');
 
     const options = Array.from(imputationSelect.querySelectorAll('option'));
     expect(options).toHaveLength(4);
@@ -52,55 +57,22 @@ describe('PipelineConfig', () => {
     expect(values).toContain('mean');
     expect(values).toContain('median');
     expect(values).toContain('mode');
-    expect(values).toContain('knn');
+    expect(values).toContain('drop');
   });
 
-  it('renders scaling dropdown with 4 options, default is standard', () => {
+  it('renders scaling dropdown with 3 options, default is minmax', () => {
     render(<PipelineConfig onApply={onApplyMock} />);
 
     const scalingSelect = screen.getByLabelText(/feature scaling/i);
-    expect(scalingSelect.value).toBe('standard');
+    expect(scalingSelect.value).toBe('minmax');
 
     const options = Array.from(scalingSelect.querySelectorAll('option'));
-    expect(options).toHaveLength(4);
+    expect(options).toHaveLength(3);
 
     const values = options.map((o) => o.value);
     expect(values).toContain('standard');
     expect(values).toContain('minmax');
-    expect(values).toContain('robust');
     expect(values).toContain('none');
-  });
-
-  it('renders outlier handling dropdown with 4 options, default is clip', () => {
-    render(<PipelineConfig onApply={onApplyMock} />);
-
-    const outlierSelect = screen.getByLabelText(/outlier handling/i);
-    expect(outlierSelect.value).toBe('clip');
-
-    const options = Array.from(outlierSelect.querySelectorAll('option'));
-    expect(options).toHaveLength(4);
-
-    const values = options.map((o) => o.value);
-    expect(values).toContain('clip');
-    expect(values).toContain('remove');
-    expect(values).toContain('winsorize');
-    expect(values).toContain('none');
-  });
-
-  it('renders feature selection dropdown with 4 options, default is all', () => {
-    render(<PipelineConfig onApply={onApplyMock} />);
-
-    const featureSelect = screen.getByLabelText(/feature selection/i);
-    expect(featureSelect.value).toBe('all');
-
-    const options = Array.from(featureSelect.querySelectorAll('option'));
-    expect(options).toHaveLength(4);
-
-    const values = options.map((o) => o.value);
-    expect(values).toContain('all');
-    expect(values).toContain('correlation');
-    expect(values).toContain('variance');
-    expect(values).toContain('mutual_info');
   });
 
   it('renders train/test slider with value 80, changing to 70 updates', async () => {
@@ -109,10 +81,16 @@ describe('PipelineConfig', () => {
     const slider = screen.getByRole('slider');
     expect(slider.value).toBe('80');
 
-    // Change the slider value by firing a change event
     fireEvent.change(slider, { target: { value: '70' } });
 
     expect(useDataStore.getState().pipelineConfig.trainTestSplit).toBe(70);
+  });
+
+  it('renders SMOTE checkbox, default is unchecked', () => {
+    render(<PipelineConfig onApply={onApplyMock} />);
+
+    const smoteCheckbox = screen.getByRole('checkbox');
+    expect(smoteCheckbox.checked).toBe(false);
   });
 
   it('apply button triggers the onApply callback', async () => {
@@ -134,15 +112,11 @@ describe('PipelineConfig', () => {
 
     const imputationSelect = screen.getByLabelText(/missing value imputation/i);
     const scalingSelect = screen.getByLabelText(/feature scaling/i);
-    const outlierSelect = screen.getByLabelText(/outlier handling/i);
-    const featureSelect = screen.getByLabelText(/feature selection/i);
     const slider = screen.getByRole('slider');
     const applyBtn = screen.getByRole('button', { name: /processing/i });
 
     expect(imputationSelect).toBeDisabled();
     expect(scalingSelect).toBeDisabled();
-    expect(outlierSelect).toBeDisabled();
-    expect(featureSelect).toBeDisabled();
     expect(slider).toBeDisabled();
     expect(applyBtn).toBeDisabled();
   });

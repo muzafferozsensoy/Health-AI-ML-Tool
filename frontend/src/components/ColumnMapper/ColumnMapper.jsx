@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import useDataStore from '../../stores/useDataStore';
 import { computeColumnStats } from '../../utils/dataAnalyzer';
+import { saveColumnMapping } from '../../api';
+import { getSessionId } from '../../api/client';
 import styles from './ColumnMapper.module.css';
 
 export default function ColumnMapper() {
@@ -10,7 +12,12 @@ export default function ColumnMapper() {
   const mapperOpen = useDataStore((s) => s.mapperOpen);
   const setMapperOpen = useDataStore((s) => s.setMapperOpen);
   const mapperSaved = useDataStore((s) => s.mapperSaved);
-  const saveMapper = useDataStore((s) => s.saveMapper);
+  const saveMapperLocal = useDataStore((s) => s.saveMapper);
+  const uploadLoading = useDataStore((s) => s.uploadLoading);
+  const mappingLoading = useDataStore((s) => s.mappingLoading);
+  const mappingError = useDataStore((s) => s.mappingError);
+  const setMappingLoading = useDataStore((s) => s.setMappingLoading);
+  const setMappingError = useDataStore((s) => s.setMappingError);
 
   const columnStats = useMemo(
     () => (csvData ? computeColumnStats(csvData) : []),
@@ -33,7 +40,36 @@ export default function ColumnMapper() {
     setIncluded((prev) => ({ ...prev, [colName]: !prev[colName] }));
   };
 
-  const canSave = targetColumn && columns.includes(targetColumn);
+  const canSave = targetColumn && columns.includes(targetColumn) && !uploadLoading && !mappingLoading;
+
+  const handleSave = async () => {
+    if (!canSave) return;
+
+    const featureColumns = columns.filter(
+      (col) => included[col] !== false && col !== targetColumn
+    );
+    const dropColumns = columns.filter(
+      (col) => included[col] === false
+    );
+
+    // If backend session exists, save via API
+    if (getSessionId()) {
+      setMappingLoading(true);
+      setMappingError(null);
+
+      const { error } = await saveColumnMapping(targetColumn, featureColumns, dropColumns);
+
+      setMappingLoading(false);
+
+      if (error) {
+        setMappingError(error);
+        return;
+      }
+    }
+
+    // Local save (gates Step 3)
+    saveMapperLocal();
+  };
 
   return (
     <div className={styles.wrapper}>
@@ -62,6 +98,12 @@ export default function ColumnMapper() {
 
       {mapperSaved && (
         <div className={styles.savedBadge}>✓ Mapping saved</div>
+      )}
+
+      {mappingError && (
+        <div className={styles.error || styles.savedBadge} style={{ color: '#e74c3c', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+          {mappingError}
+        </div>
       )}
 
       {mapperOpen && (
@@ -103,10 +145,10 @@ export default function ColumnMapper() {
           </table>
           <button
             className={`${styles.saveBtn} ${!canSave ? styles.disabled : ''}`}
-            onClick={canSave ? saveMapper : undefined}
+            onClick={canSave ? handleSave : undefined}
             disabled={!canSave}
           >
-            Save Mapping
+            {mappingLoading ? 'Saving...' : 'Save Mapping'}
           </button>
         </div>
       )}

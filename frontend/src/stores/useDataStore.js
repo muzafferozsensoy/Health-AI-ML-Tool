@@ -10,16 +10,25 @@ const initialState = {
   mapperSaved: false,
   mapperOpen: false,
   pipelineConfig: {
-    imputation: 'median',
-    scaling: 'standard',
-    outlierHandling: 'clip',
-    featureSelection: 'all',
+    imputation: 'mean',
+    scaling: 'minmax',
     trainTestSplit: 80,
+    smote: false,
   },
   pipelineStatus: 'idle',
   pipelineProgress: 0,
   pipelineLogs: [],
   pipelineDuration: null,
+  // Backend integration state
+  uploadLoading: false,
+  uploadError: null,
+  backendSummary: null,
+  mappingLoading: false,
+  mappingError: null,
+  prepLoading: false,
+  prepError: null,
+  prepResult: null,
+  prepOptions: null,
 };
 
 const useDataStore = create((set, get) => ({
@@ -33,6 +42,8 @@ const useDataStore = create((set, get) => ({
       dataSource: 'uploaded',
       mapperSaved: false,
       targetColumn: null,
+      backendSummary: null,
+      uploadError: null,
     }),
 
   setCsvError: (error) => set({ csvError: error }),
@@ -45,6 +56,8 @@ const useDataStore = create((set, get) => ({
       csvFileName: null,
       mapperSaved: false,
       targetColumn: null,
+      backendSummary: null,
+      uploadError: null,
     }),
 
   setTargetColumn: (col) => set({ targetColumn: col }),
@@ -66,12 +79,25 @@ const useDataStore = create((set, get) => ({
     set((s) => ({ pipelineLogs: [...s.pipelineLogs, log] })),
   setPipelineDuration: (duration) => set({ pipelineDuration: duration }),
 
+  // Backend integration setters
+  setUploadLoading: (loading) => set({ uploadLoading: loading }),
+  setUploadError: (error) => set({ uploadError: error }),
+  setBackendSummary: (summary) => set({ backendSummary: summary }),
+  setMappingLoading: (loading) => set({ mappingLoading: loading }),
+  setMappingError: (error) => set({ mappingError: error }),
+  setPrepLoading: (loading) => set({ prepLoading: loading }),
+  setPrepError: (error) => set({ prepError: error }),
+  setPrepResult: (result) => set({ prepResult: result }),
+  setPrepOptions: (options) => set({ prepOptions: options }),
+
   resetPipeline: () =>
     set({
       pipelineStatus: 'idle',
       pipelineProgress: 0,
       pipelineLogs: [],
       pipelineDuration: null,
+      prepResult: null,
+      prepError: null,
     }),
 
   resetAll: () => set({ ...initialState }),

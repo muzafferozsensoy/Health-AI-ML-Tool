@@ -2,6 +2,8 @@ import { useCallback } from 'react';
 import useAppStore from '../../stores/useAppStore';
 import useDataStore from '../../stores/useDataStore';
 import { domains } from '../../data/domains';
+import { runDataPreparation } from '../../api';
+import { getSessionId } from '../../api/client';
 import { runPipeline } from '../../utils/pipelineSimulator';
 import PipelineConfig from '../../components/PipelineConfig/PipelineConfig';
 import ProgressRing from '../../components/ProgressRing/ProgressRing';
@@ -24,6 +26,8 @@ export default function Step3DataPreparation() {
   const addPipelineLog = useDataStore((s) => s.addPipelineLog);
   const setPipelineDuration = useDataStore((s) => s.setPipelineDuration);
   const resetPipeline = useDataStore((s) => s.resetPipeline);
+  const setPrepResult = useDataStore((s) => s.setPrepResult);
+  const prepResult = useDataStore((s) => s.prepResult);
 
   const domain = domains.find((d) => d.id === selectedDomainId) || domains[0];
 
@@ -33,12 +37,45 @@ export default function Step3DataPreparation() {
     setPipelineStatus('running');
     const start = performance.now();
 
-    await runPipeline(
-      pipelineConfig,
-      csvData,
-      (progress) => setPipelineProgress(progress),
-      (log) => addPipelineLog(log)
-    );
+    // Try backend first if session exists
+    if (getSessionId()) {
+      addPipelineLog('Sending data preparation request to backend...');
+      setPipelineProgress(25);
+
+      const { data, error } = await runDataPreparation(pipelineConfig);
+
+      if (error) {
+        addPipelineLog(`Backend error: ${error}`);
+        addPipelineLog('Falling back to local simulation...');
+        // Fall back to local simulator
+        await runPipeline(
+          pipelineConfig,
+          csvData,
+          (progress) => setPipelineProgress(progress),
+          (log) => addPipelineLog(log)
+        );
+      } else {
+        setPipelineProgress(50);
+        addPipelineLog(`Missing values handled: ${data.missing_handled} cells`);
+        setPipelineProgress(65);
+        addPipelineLog(`Normalisation applied: ${data.normalisation_applied}`);
+        addPipelineLog(`SMOTE applied: ${data.smote_applied ? 'Yes' : 'No'}`);
+        setPipelineProgress(80);
+        addPipelineLog(`Training rows: ${data.train_rows}, Test rows: ${data.test_rows}`);
+        addPipelineLog(`Features used: ${data.features_used.length}`);
+        setPipelineProgress(100);
+        addPipelineLog(data.message);
+        setPrepResult(data);
+      }
+    } else {
+      // No backend session — use local simulator
+      await runPipeline(
+        pipelineConfig,
+        csvData,
+        (progress) => setPipelineProgress(progress),
+        (log) => addPipelineLog(log)
+      );
+    }
 
     const elapsed = ((performance.now() - start) / 1000).toFixed(1);
     setPipelineDuration(elapsed);
@@ -95,8 +132,14 @@ export default function Step3DataPreparation() {
         <p className={styles.completeInfo}>
           <span className={styles.infoIcon}>ℹ</span>
           Data Preparation Engine completed processing{' '}
-          {csvData?.length?.toLocaleString() || 0} records. Final validation
-          passed. Feature engineering artifacts stored in local cache.
+          {prepResult
+            ? (prepResult.train_rows + prepResult.test_rows).toLocaleString()
+            : csvData?.length?.toLocaleString() || 0}{' '}
+          records
+          {prepResult && (
+            <> ({prepResult.train_rows.toLocaleString()} train / {prepResult.test_rows.toLocaleString()} test)</>
+          )}
+          . Final validation passed.
         </p>
       )}
     </div>

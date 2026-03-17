@@ -1,6 +1,7 @@
 import { domains } from '../../data/domains';
 import useAppStore from '../../stores/useAppStore';
 import useDataStore from '../../stores/useDataStore';
+import { clearSessionId } from '../../api';
 import styles from './DomainPillBar.module.css';
 
 export default function DomainPillBar() {
@@ -12,6 +13,7 @@ export default function DomainPillBar() {
     if (id !== selectedDomainId) {
       setDomain(id);
       resetData();
+      clearSessionId();
     }
   };
 

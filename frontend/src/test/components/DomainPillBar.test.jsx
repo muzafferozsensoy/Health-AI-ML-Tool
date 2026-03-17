@@ -1,9 +1,14 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import DomainPillBar from '../../components/DomainPillBar/DomainPillBar';
 import useAppStore from '../../stores/useAppStore';
 import useDataStore from '../../stores/useDataStore';
+
+// Mock the API
+vi.mock('../../api', () => ({
+  clearSessionId: vi.fn(),
+}));
 
 describe('DomainPillBar', () => {
   beforeEach(() => {

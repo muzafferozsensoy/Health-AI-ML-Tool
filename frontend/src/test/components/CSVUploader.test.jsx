@@ -1,9 +1,14 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import CSVUploader from '../../components/CSVUploader/CSVUploader';
 import useAppStore from '../../stores/useAppStore';
 import useDataStore from '../../stores/useDataStore';
+
+// Mock the API so backend calls don't interfere with tests
+vi.mock('../../api', () => ({
+  uploadCsv: vi.fn(() => Promise.resolve({ data: null, error: null })),
+}));
 
 import { standardCsv, csvWithMissing, mixedTypesCsv, largeCsv, quotedFieldsCsv } from '../mocks/validCsvFiles';
 import {

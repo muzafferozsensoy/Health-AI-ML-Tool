@@ -1,9 +1,17 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import ColumnMapper from '../../components/ColumnMapper/ColumnMapper';
 import useDataStore from '../../stores/useDataStore';
 import useAppStore from '../../stores/useAppStore';
+
+// Mock the API so backend calls don't interfere with tests
+vi.mock('../../api', () => ({
+  saveColumnMapping: vi.fn(() => Promise.resolve({ data: { schema_ok: true }, error: null })),
+}));
+vi.mock('../../api/client', () => ({
+  getSessionId: vi.fn(() => null),
+}));
 
 // Mock CSV data that simulates what PapaParse would produce
 const mockCsvData = [

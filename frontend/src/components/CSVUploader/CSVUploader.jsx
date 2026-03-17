@@ -1,9 +1,27 @@
 import { useRef } from 'react';
+import Papa from 'papaparse';
 import useAppStore from '../../stores/useAppStore';
 import useDataStore from '../../stores/useDataStore';
 import { getDefaultDataset } from '../../data/defaultDatasets';
 import { validateCSVFile, validateCSVContent, parseCSV } from '../../utils/csvParser';
+import { uploadCsv } from '../../api';
 import styles from './CSVUploader.module.css';
+
+function syncToBackend(file) {
+  const store = useDataStore.getState();
+  store.setUploadLoading(true);
+  store.setUploadError(null);
+
+  uploadCsv(file).then(({ data, error }) => {
+    const s = useDataStore.getState();
+    s.setUploadLoading(false);
+    if (error) {
+      s.setUploadError(error);
+    } else {
+      s.setBackendSummary(data);
+    }
+  });
+}
 
 export default function CSVUploader() {
   const fileInputRef = useRef(null);
@@ -14,11 +32,19 @@ export default function CSVUploader() {
   const csvError = useDataStore((s) => s.csvError);
   const csvFileName = useDataStore((s) => s.csvFileName);
   const dataSource = useDataStore((s) => s.dataSource);
+  const uploadLoading = useDataStore((s) => s.uploadLoading);
+  const uploadError = useDataStore((s) => s.uploadError);
 
   const handleDefault = () => {
     const dataset = getDefaultDataset(selectedDomainId);
     if (dataset) {
       useDefaultDatasetAction(dataset.rows);
+
+      // Convert to CSV and upload to backend
+      const csvString = Papa.unparse(dataset.rows);
+      const blob = new Blob([csvString], { type: 'text/csv' });
+      const file = new File([blob], `${selectedDomainId}_default.csv`, { type: 'text/csv' });
+      syncToBackend(file);
     }
   };
 
@@ -46,6 +72,9 @@ export default function CSVUploader() {
         return;
       }
       setCsvData(parsed.data, file.name);
+
+      // Upload to backend in parallel
+      syncToBackend(file);
     } catch {
       setCsvError('Failed to parse the CSV file. Please check the file format.');
     }
@@ -80,15 +109,23 @@ export default function CSVUploader() {
         </div>
       )}
 
+      {uploadError && (
+        <div className={styles.error} role="alert">
+          Backend sync failed: {uploadError}
+        </div>
+      )}
+
       {dataSource === 'uploaded' && csvFileName && (
         <div className={styles.fileInfo}>
           Using: {csvFileName}
+          {uploadLoading && <span> (syncing...)</span>}
         </div>
       )}
 
       {dataSource === 'default' && (
         <div className={styles.fileInfo}>
           Using: Default dataset
+          {uploadLoading && <span> (syncing...)</span>}
         </div>
       )}
     </div>
