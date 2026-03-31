@@ -105,6 +105,9 @@ class TrainResponse(BaseModel):
     precision: float
     recall: float
     f1: float
+    specificity: Optional[float] = None
+    auc: Optional[float] = None
+    roc_curve: Optional[Dict[str, Any]] = None   # {"fpr": [...], "tpr": [...], "auc": float}
     confusion_matrix: List[List[int]]
     class_labels: List[str]
     message: str

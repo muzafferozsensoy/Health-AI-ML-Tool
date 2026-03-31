@@ -5,7 +5,8 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score,
-    f1_score, confusion_matrix,
+    f1_score, confusion_matrix as sk_confusion_matrix,
+    roc_auc_score, roc_curve as sk_roc_curve,
 )
 
 from services import session_store
@@ -174,7 +175,51 @@ def train_model(
     precision = round(float(precision_score(y_test, y_pred, average=avg, zero_division=0)), 4)
     recall    = round(float(recall_score(y_test, y_pred, average=avg, zero_division=0)), 4)
     f1        = round(float(f1_score(y_test, y_pred, average=avg, zero_division=0)), 4)
-    cm        = confusion_matrix(y_test, y_pred).tolist()
+    cm        = sk_confusion_matrix(y_test, y_pred).tolist()
+
+    # ── Specificity from confusion matrix ────────────────────────────────────
+    specificity_val = None
+    try:
+        cm_arr = np.array(cm)
+        if cm_arr.shape == (2, 2):
+            tn, fp = cm_arr[0, 0], cm_arr[0, 1]
+            specificity_val = round(float(tn / (tn + fp)), 4) if (tn + fp) > 0 else 0.0
+        else:
+            # Multiclass: weighted average specificity
+            spec_sum, weight_sum = 0.0, 0.0
+            for i in range(cm_arr.shape[0]):
+                tp_i = cm_arr[i, i]
+                fp_i = cm_arr[:, i].sum() - tp_i
+                tn_i = cm_arr.sum() - cm_arr[i, :].sum() - cm_arr[:, i].sum() + tp_i
+                fn_i = cm_arr[i, :].sum() - tp_i
+                denom = tn_i + fp_i
+                spec_i = tn_i / denom if denom > 0 else 0.0
+                class_count = cm_arr[i, :].sum()
+                spec_sum += spec_i * class_count
+                weight_sum += class_count
+            specificity_val = round(float(spec_sum / weight_sum), 4) if weight_sum > 0 else 0.0
+    except Exception:
+        specificity_val = None
+
+    # ── AUC & ROC curve ──────────────────────────────────────────────────────
+    auc_val = None
+    roc_curve_data = None
+    try:
+        y_proba = model.predict_proba(X_test)
+        if len(class_labels) == 2:
+            auc_val = round(float(roc_auc_score(y_test, y_proba[:, 1])), 4)
+            fpr, tpr, _ = sk_roc_curve(y_test, y_proba[:, 1])
+            roc_curve_data = {
+                "fpr": [round(float(v), 4) for v in fpr],
+                "tpr": [round(float(v), 4) for v in tpr],
+                "auc": auc_val,
+            }
+        else:
+            auc_val = round(float(roc_auc_score(
+                y_test, y_proba, multi_class="ovr", average="weighted"
+            )), 4)
+    except Exception:
+        pass
 
     # ── Persist trained model for Step 5 ─────────────────────────────────────
     session_store.set(x_session_id, "trained_model", model)
@@ -191,6 +236,9 @@ def train_model(
         precision=precision,
         recall=recall,
         f1=f1,
+        specificity=specificity_val,
+        auc=auc_val,
+        roc_curve=roc_curve_data,
         confusion_matrix=cm,
         class_labels=class_labels,
         message=(
