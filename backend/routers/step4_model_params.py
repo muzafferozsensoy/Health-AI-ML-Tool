@@ -222,9 +222,9 @@ def train_model(
     roc_curve_data = None
     try:
         y_proba = model.predict_proba(X_test)
-        if len(class_labels) == 2:
-            auc_val = round(float(roc_auc_score(y_test, y_proba[:, 1])), 4)
-            fpr, tpr, _ = sk_roc_curve(y_test, y_proba[:, 1])
+        if is_binary:
+            auc_val = round(float(roc_auc_score(y_test, y_proba[:, 1], labels=sorted(np.unique(y_test)))), 4)
+            fpr, tpr, _ = sk_roc_curve(y_test, y_proba[:, 1], pos_label=pos_lbl)
             roc_curve_data = {
                 "fpr": [round(float(v), 4) for v in fpr],
                 "tpr": [round(float(v), 4) for v in tpr],
