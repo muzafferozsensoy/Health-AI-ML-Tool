@@ -39,7 +39,8 @@ export default function Step5Results() {
   const { metrics, confusionMatrix, rocCurve, model } = trainingResults;
   const modelDef = MODEL_DEFINITIONS.find((m) => m.id === model);
   const modelName = modelDef ? modelDef.fullName : model;
-  const showDanger = metrics.recall < 0.5;
+  const recallNorm = metrics.recall > 1 ? metrics.recall / 100 : metrics.recall;
+  const showDanger = recallNorm < 0.5;
 
   const alreadyCompared = comparisonList.some((e) => e.model === model);
 
@@ -70,7 +71,7 @@ export default function Step5Results() {
 
       <DangerBanner
         show={showDanger}
-        message={`Low Sensitivity Alert: Only ${(metrics.recall * 100).toFixed(1)}% of patients with the condition are being detected. This means a high rate of missed diagnoses.`}
+        message={`Low Sensitivity Alert: Only ${(recallNorm * 100).toFixed(1)}% of patients with the condition are being detected. This means a high rate of missed diagnoses.`}
       />
 
       <div className={styles.layout}>
