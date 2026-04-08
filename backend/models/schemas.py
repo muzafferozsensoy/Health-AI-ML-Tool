@@ -37,6 +37,7 @@ class DatasetSummary(BaseModel):
 
 
 class ColumnMapping(BaseModel):
+    """Sent by the frontend after the user maps columns in the modal."""
     target_column: str
     feature_columns: List[str]
     drop_columns: List[str] = []
@@ -81,45 +82,38 @@ class DataPrepResponse(BaseModel):
     message: str
 
 
-# ── Step 4: Model Parameters ──────────────────────────────────────────────────
+# ── Step 4: Model & Parameters ────────────────────────────────────────────────
 
 class SVMParams(BaseModel):
-    kernel: str = "linear"        # "linear" | "rbf"
+    kernel: str = "linear"          # "linear" | "rbf"
     C: float = 1.0
-    gamma: str = "scale"          # only used for rbf
-
+    gamma: str = "scale"            # only used for RBF
 
 class RandomForestParams(BaseModel):
-    n_estimators: int = 100       # US-012: tree count
+    n_estimators: int = 100         # US-012: tree count
     max_depth: Optional[int] = None
     random_state: int = 42
 
-
 class KNNParams(BaseModel):
-    n_neighbors: int = 5          # K value
-    metric: str = "euclidean"     # "euclidean" | "manhattan"
-
+    n_neighbors: int = 5            # K value
+    metric: str = "euclidean"       # "euclidean" | "manhattan"
 
 class DecisionTreeParams(BaseModel):
     max_depth: Optional[int] = 5
-    criterion: str = "gini"       # "gini" | "entropy"
+    criterion: str = "gini"         # "gini" | "entropy"
     random_state: int = 42
-
 
 class LogisticRegressionParams(BaseModel):
     C: float = 1.0
     max_iter: int = 200
     random_state: int = 42
 
-
 class NaiveBayesParams(BaseModel):
     var_smoothing: float = 1e-9
 
-
 class TrainRequest(BaseModel):
-    model: str                    # model id string
-    params: Dict[str, Any]        # validated inside router per model
-
+    model: str                      # "svm" | "random_forest" | "knn" | etc.
+    params: Dict[str, Any]
 
 class TrainResponse(BaseModel):
     model: str
@@ -150,7 +144,6 @@ class ResultsResponse(BaseModel):
     confusion_matrix: List[List[int]]
     class_labels: List[str]
     test_size: int
-
 
 class CompareEntry(BaseModel):
     model: str

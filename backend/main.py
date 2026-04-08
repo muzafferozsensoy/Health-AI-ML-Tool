@@ -19,6 +19,7 @@ app = FastAPI(
     version="0.3.0",
 )
 
+# ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,6 +29,7 @@ app.add_middleware(
     expose_headers=["X-Session-Id"],
 )
 
+# ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(step1_clinical_context.router)
 app.include_router(step2_data_exploration.router)
 app.include_router(step3_data_preparation.router)
@@ -35,6 +37,7 @@ app.include_router(step4_model_params.router)
 app.include_router(step5_results.router)
 
 
+# ── Health check ──────────────────────────────────────────────────────────────
 @app.get("/health", tags=["Meta"])
 def health():
     return {"status": "ok", "sprint": 3, "steps_implemented": [1, 2, 3, 4, 5]}

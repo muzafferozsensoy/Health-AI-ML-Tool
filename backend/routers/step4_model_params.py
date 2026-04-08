@@ -14,6 +14,7 @@ from sklearn.metrics import (
 )
 
 from services import session_store
+from services.prep_service import prepare_data
 from models.schemas import (
     TrainRequest, TrainResponse,
     SVMParams, RandomForestParams,
@@ -29,10 +30,30 @@ SUPPORTED_MODELS = {
 }
 
 
+def _get_prepared_splits(session: dict):
+    """Re-run prep pipeline using stored session data and return X/y splits."""
+    df = session.get("df_raw")
+    target_col = session.get("target_column")
+    feature_cols = session.get("feature_columns")
+    prep_request = session.get("prep_request")
+
+    if df is None or not target_col or not feature_cols or prep_request is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Session data incomplete. Please complete Steps 2 and 3 first.",
+        )
+
+    result = prepare_data(df, target_col, feature_cols, prep_request)
+    return result
+
+
 # ── Model builders ────────────────────────────────────────────────────────────
 
-def _train_svm(raw_params: dict):
-    """US-011: SVM Kernel Selection. When kernel=RBF, C and gamma apply."""
+def _train_svm(X_train, y_train, raw_params: dict):
+    """
+    US-011: SVM Kernel Selection Tuning.
+    When kernel='rbf', C and gamma are applied. When kernel='linear', gamma is ignored.
+    """
     try:
         p = SVMParams(**raw_params)
     except Exception as exc:
@@ -40,6 +61,7 @@ def _train_svm(raw_params: dict):
 
     if p.kernel not in {"linear", "rbf"}:
         raise HTTPException(status_code=422, detail=f"Invalid kernel '{p.kernel}'. Choose 'linear' or 'rbf'.")
+
     if p.C <= 0:
         raise HTTPException(status_code=422, detail=f"C must be > 0 (got {p.C}).")
 
@@ -51,8 +73,11 @@ def _train_svm(raw_params: dict):
     return model, params_used
 
 
-def _train_random_forest(raw_params: dict):
-    """US-012: Random Forest Tree Count Tuning."""
+def _train_random_forest(X_train, y_train, raw_params: dict):
+    """
+    US-012: Random Forest Tree Count Tuning.
+    n_estimators drives the tree count; training uses that forest size.
+    """
     try:
         p = RandomForestParams(**raw_params)
     except Exception as exc:
@@ -70,8 +95,8 @@ def _train_random_forest(raw_params: dict):
     return model, params_used
 
 
-def _train_knn(raw_params: dict):
-    """KNN — K-Nearest Neighbors. Finds K most similar past patients."""
+def _train_knn(X_train, y_train, raw_params: dict):
+    """KNN — finds the K most similar past patients and predicts based on their outcomes."""
     try:
         p = KNNParams(**raw_params)
     except Exception as exc:
@@ -80,16 +105,13 @@ def _train_knn(raw_params: dict):
     if not (1 <= p.n_neighbors <= 50):
         raise HTTPException(status_code=422, detail=f"n_neighbors must be 1–50 (got {p.n_neighbors}).")
 
-    model = KNeighborsClassifier(
-        n_neighbors=p.n_neighbors,
-        metric=p.metric,
-    )
+    model = KNeighborsClassifier(n_neighbors=p.n_neighbors, metric=p.metric)
     params_used = {"n_neighbors": p.n_neighbors, "metric": p.metric}
     return model, params_used
 
 
-def _train_decision_tree(raw_params: dict):
-    """Decision Tree — Series of yes/no questions to classify patients."""
+def _train_decision_tree(X_train, y_train, raw_params: dict):
+    """Decision Tree — series of yes/no questions to classify patients."""
     try:
         p = DecisionTreeParams(**raw_params)
     except Exception as exc:
@@ -104,24 +126,20 @@ def _train_decision_tree(raw_params: dict):
     return model, params_used
 
 
-def _train_logistic_regression(raw_params: dict):
-    """Logistic Regression — Estimates probability of each class."""
+def _train_logistic_regression(X_train, y_train, raw_params: dict):
+    """Logistic Regression — estimates probability of each class."""
     try:
         p = LogisticRegressionParams(**raw_params)
     except Exception as exc:
         raise HTTPException(status_code=422, detail=f"Invalid Logistic Regression params: {exc}")
 
-    model = LogisticRegression(
-        C=p.C,
-        max_iter=p.max_iter,
-        random_state=p.random_state,
-    )
+    model = LogisticRegression(C=p.C, max_iter=p.max_iter, random_state=p.random_state)
     params_used = {"C": p.C, "max_iter": p.max_iter, "random_state": p.random_state}
     return model, params_used
 
 
-def _train_naive_bayes(raw_params: dict):
-    """Naive Bayes — Probabilistic classifier based on Bayes theorem."""
+def _train_naive_bayes(X_train, y_train, raw_params: dict):
+    """Naive Bayes — probabilistic classifier based on Bayes theorem."""
     try:
         p = NaiveBayesParams(**raw_params)
     except Exception as exc:
@@ -132,11 +150,80 @@ def _train_naive_bayes(raw_params: dict):
     return model, params_used
 
 
-# ── Evaluation helper ─────────────────────────────────────────────────────────
+# ── Train endpoint ────────────────────────────────────────────────────────────
 
-def _evaluate(model, X_test, y_test, y_train, class_labels):
-    """Compute all metrics: accuracy, precision, recall, F1, specificity, AUC, ROC, confusion matrix."""
+@router.post(
+    "/train",
+    response_model=TrainResponse,
+    summary="Train a model with selected parameters",
+)
+def train_model(
+    request: TrainRequest,
+    x_session_id: str = Header(...),
+):
+    """
+    Trains the selected model using the prepared data from Step 3.
+    Gate: Requires prep_complete = True.
+
+    Supported models: svm, random_forest, knn, decision_tree, logistic_regression, naive_bayes
+    """
+    session = session_store.get(x_session_id)
+
+    # ── Gate check ────────────────────────────────────────────────────────────
+    if not session.get("prep_complete", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Step 4 is locked. Please complete Data Preparation in Step 3 before training a model.",
+        )
+
+    if request.model not in SUPPORTED_MODELS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported model '{request.model}'. Choose from: {sorted(SUPPORTED_MODELS)}",
+        )
+
+    df           = session.get("df_raw")
+    target_col   = session.get("target_column")
+    feature_cols = session.get("feature_columns")
+    prep_req     = session.get("prep_request")
+
+    if df is None or not target_col or not feature_cols or prep_req is None:
+        raise HTTPException(status_code=400, detail="Session data incomplete. Please complete Steps 2 and 3 first.")
+
+    from services.train_service import get_splits
+    X_train, X_test, y_train, y_test = get_splits(df, target_col, feature_cols, prep_req)
+
+    # ── Validate target is categorical ────────────────────────────────────────
+    n_unique = len(np.unique(y_train))
+    if n_unique > 20:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"Target column '{target_col}' has {n_unique} unique values and "
+                f"appears to be continuous. Classification models require a categorical "
+                f"target. Please select a column with discrete classes (e.g. Yes/No, 0/1) in Step 2."
+            ),
+        )
+
+    # ── Build model ───────────────────────────────────────────────────────────
+    builders = {
+        "svm":                 _train_svm,
+        "random_forest":       _train_random_forest,
+        "knn":                 _train_knn,
+        "decision_tree":       _train_decision_tree,
+        "logistic_regression": _train_logistic_regression,
+        "naive_bayes":         _train_naive_bayes,
+    }
+    model, params_used = builders[request.model](X_train, y_train, request.params)
+
+    try:
+        model.fit(X_train, y_train)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Training failed: {exc}")
+
+    # ── Evaluate ──────────────────────────────────────────────────────────────
     y_pred = model.predict(X_test)
+    class_labels = [str(c) for c in sorted(np.unique(np.concatenate([y_train, y_test])))]
     is_binary = len(class_labels) == 2
     avg = "binary" if is_binary else "weighted"
     pos_lbl = class_labels[-1] if is_binary else None
@@ -147,7 +234,7 @@ def _evaluate(model, X_test, y_test, y_train, class_labels):
     f1        = round(float(f1_score(y_test, y_pred, average=avg, pos_label=pos_lbl, zero_division=0)), 4)
     cm        = sk_confusion_matrix(y_test, y_pred).tolist()
 
-    # Specificity
+    # ── Specificity ───────────────────────────────────────────────────────────
     specificity_val = None
     try:
         cm_arr = np.array(cm)
@@ -169,13 +256,13 @@ def _evaluate(model, X_test, y_test, y_train, class_labels):
     except Exception:
         pass
 
-    # AUC & ROC curve
+    # ── AUC & ROC curve ───────────────────────────────────────────────────────
     auc_val = None
     roc_curve_data = None
     try:
         y_proba = model.predict_proba(X_test)
         if is_binary:
-            auc_val = round(float(roc_auc_score(y_test, y_proba[:, 1])), 4)
+            auc_val = round(float(roc_auc_score(y_test, y_proba[:, 1], labels=sorted(np.unique(y_test)))), 4)
             fpr, tpr, _ = sk_roc_curve(y_test, y_proba[:, 1], pos_label=pos_lbl)
             roc_curve_data = {
                 "fpr": [round(float(v), 4) for v in fpr],
@@ -187,84 +274,7 @@ def _evaluate(model, X_test, y_test, y_train, class_labels):
     except Exception:
         pass
 
-    return accuracy, precision, recall, f1, specificity_val, auc_val, roc_curve_data, cm
-
-
-# ── Train endpoint ────────────────────────────────────────────────────────────
-
-@router.post(
-    "/train",
-    response_model=TrainResponse,
-    summary="Train any of the 6 ML models with selected parameters",
-)
-def train_model(
-    request: TrainRequest,
-    x_session_id: str = Header(...),
-):
-    """
-    Trains the selected model using prepared data from Step 3.
-    Gate: requires prep_complete = True.
-
-    Supported models: svm, random_forest, knn, decision_tree, logistic_regression, naive_bayes
-    """
-    session = session_store.get(x_session_id)
-
-    if not session.get("prep_complete", False):
-        raise HTTPException(
-            status_code=403,
-            detail="Step 4 is locked. Please complete Data Preparation in Step 3 first.",
-        )
-
-    if request.model not in SUPPORTED_MODELS:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Unsupported model '{request.model}'. Choose from: {sorted(SUPPORTED_MODELS)}",
-        )
-
-    df         = session.get("df_raw")
-    target_col = session.get("target_column")
-    feature_cols = session.get("feature_columns")
-    prep_req   = session.get("prep_request")
-
-    if df is None or not target_col or not feature_cols or prep_req is None:
-        raise HTTPException(status_code=400, detail="Session data incomplete. Complete Steps 2 and 3 first.")
-
-    from services.train_service import get_splits
-    X_train, X_test, y_train, y_test = get_splits(df, target_col, feature_cols, prep_req)
-
-    # Validate target is categorical
-    n_unique = len(np.unique(y_train))
-    if n_unique > 20:
-        raise HTTPException(
-            status_code=422,
-            detail=(
-                f"Target column '{target_col}' has {n_unique} unique values and appears continuous. "
-                f"Please select a categorical target column (e.g. 0/1, Yes/No) in Step 2."
-            ),
-        )
-
-    # Build model
-    builders = {
-        "svm":                  _train_svm,
-        "random_forest":        _train_random_forest,
-        "knn":                  _train_knn,
-        "decision_tree":        _train_decision_tree,
-        "logistic_regression":  _train_logistic_regression,
-        "naive_bayes":          _train_naive_bayes,
-    }
-    model, params_used = builders[request.model](request.params)
-
-    try:
-        model.fit(X_train, y_train)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Training failed: {exc}")
-
-    class_labels = [str(c) for c in sorted(np.unique(np.concatenate([y_train, y_test])))]
-    accuracy, precision, recall, f1, specificity_val, auc_val, roc_curve_data, cm = _evaluate(
-        model, X_test, y_test, y_train, class_labels
-    )
-
-    # Persist for Step 5
+    # ── Persist for Step 5 ────────────────────────────────────────────────────
     session_store.set(x_session_id, "trained_model", model)
     session_store.set(x_session_id, "model_name", request.model)
     session_store.set(x_session_id, "class_labels", class_labels)
@@ -344,6 +354,7 @@ def get_model_options():
                         "label": "Regularisation (C)",
                         "type": "slider",
                         "min": 0.01, "max": 100.0, "step": 0.01, "default": 1.0,
+                        "visible_when": {"kernel": ["linear", "rbf"]},
                     },
                     {
                         "key": "gamma",

@@ -16,12 +16,16 @@ router = APIRouter(prefix="/api/step5", tags=["Step 5 - Results"])
 @router.get(
     "/results",
     response_model=ResultsResponse,
-    summary="Get full results for the last trained model",
+    summary="Get full results for the last trained model (US-014, US-015, US-016)",
 )
 def get_results(x_session_id: str = Header(...)):
     """
-    Returns all metrics, confusion matrix, and ROC curve for the
-    currently trained model. Gate: train_complete must be True.
+    Returns all metrics, confusion matrix, and ROC curve for the trained model.
+    Gate: train_complete must be True.
+
+    US-014: Confusion matrix (TP/TN/FP/FN)
+    US-015: Accuracy, sensitivity (recall), specificity in clinical language
+    US-016: ROC curve with AUC score
     """
     session = session_store.get(x_session_id)
 
@@ -31,11 +35,11 @@ def get_results(x_session_id: str = Header(...)):
             detail="Step 5 is locked. Please train a model in Step 4 first.",
         )
 
-    model       = session.get("trained_model")
-    X_test      = session.get("X_test")
-    y_test      = session.get("y_test")
+    model        = session.get("trained_model")
+    X_test       = session.get("X_test")
+    y_test       = session.get("y_test")
     class_labels = session.get("class_labels", [])
-    model_name  = session.get("model_name", "unknown")
+    model_name   = session.get("model_name", "unknown")
 
     if model is None or X_test is None or y_test is None:
         raise HTTPException(status_code=400, detail="No trained model found. Please complete Step 4.")
@@ -51,7 +55,7 @@ def get_results(x_session_id: str = Header(...)):
     f1        = round(float(f1_score(y_test, y_pred, average=avg, pos_label=pos_lbl, zero_division=0)), 4)
     cm        = sk_confusion_matrix(y_test, y_pred).tolist()
 
-    # Specificity
+    # Specificity (US-015)
     specificity_val = None
     try:
         cm_arr = np.array(cm)
@@ -73,7 +77,7 @@ def get_results(x_session_id: str = Header(...)):
     except Exception:
         pass
 
-    # AUC & ROC
+    # AUC & ROC curve (US-016)
     auc_val = None
     roc_curve_data = None
     try:
@@ -124,7 +128,7 @@ def add_to_comparison(x_session_id: str = Header(...)):
             detail="No trained model to compare. Please train a model in Step 4 first.",
         )
 
-    metrics = session.get("last_metrics", {})
+    metrics    = session.get("last_metrics", {})
     model_name = session.get("model_name", "unknown")
 
     entry = CompareEntry(
