@@ -1,4 +1,5 @@
 import useAppStore from './stores/useAppStore';
+import useThemeStore from './stores/useThemeStore';
 import Header from './components/Header/Header';
 import DomainPillBar from './components/DomainPillBar/DomainPillBar';
 import Stepper from './components/Stepper/Stepper';
@@ -9,9 +10,12 @@ import Step2DataExploration from './pages/Step2DataExploration/Step2DataExplorat
 import Step3DataPreparation from './pages/Step3DataPreparation/Step3DataPreparation';
 import Step4ModelParameters from './pages/Step4ModelParameters/Step4ModelParameters';
 import Step5Results from './pages/Step5Results/Step5Results';
+import Step6Explainability from './pages/Step6Explainability/Step6Explainability';
+import Step7EthicsAndBias from './pages/Step7EthicsAndBias/Step7EthicsAndBias';
 import styles from './App.module.css';
 
 export default function App() {
+  useThemeStore(); // initialize theme from localStorage on first render
   const currentStep = useAppStore((s) => s.currentStep);
   const showHelp = useAppStore((s) => s.showHelp);
 
@@ -27,6 +31,10 @@ export default function App() {
         return <Step4ModelParameters />;
       case 5:
         return <Step5Results />;
+      case 6:
+        return <Step6Explainability />;
+      case 7:
+        return <Step7EthicsAndBias />;
       default:
         return (
           <div className={styles.comingSoon}>

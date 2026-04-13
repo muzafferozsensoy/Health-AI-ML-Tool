@@ -4,6 +4,7 @@ import styles from './Stepper.module.css';
 
 export default function Stepper() {
   const currentStep = useAppStore((s) => s.currentStep);
+  const setStep = useAppStore((s) => s.setStep);
 
   return (
     <nav className={styles.stepper} aria-label="Workflow steps">
@@ -11,7 +12,6 @@ export default function Stepper() {
         {steps.map((step) => {
           const isActive = step.number === currentStep;
           const isCompleted = step.number < currentStep;
-          const isFuture = step.number > currentStep;
 
           let stateClass = styles.future;
           if (isActive) stateClass = styles.active;
@@ -22,6 +22,8 @@ export default function Stepper() {
               key={step.number}
               className={`${styles.step} ${stateClass}`}
               aria-current={isActive ? 'step' : undefined}
+              onClick={() => setStep(step.number)}
+              style={{ cursor: 'pointer' }}
             >
               <span className={styles.stepNumber}>
                 {isCompleted ? '\u2713' : step.number}

@@ -11,6 +11,7 @@ import ModelTabBar from '../../components/ModelTabBar/ModelTabBar';
 import ModelParameterPanel from '../../components/ModelParameterPanel/ModelParameterPanel';
 import RetrainingBanner from '../../components/RetrainingBanner/RetrainingBanner';
 import StatusBadge from '../../components/StatusBadge/StatusBadge';
+import ModelVisualization from '../../components/ModelVisualizations/ModelVisualization';
 import styles from './Step4ModelParameters.module.css';
 
 export default function Step4ModelParameters() {
@@ -23,6 +24,7 @@ export default function Step4ModelParameters() {
   const autoRetrain = useModelStore((s) => s.autoRetrain);
   const trainingStatus = useModelStore((s) => s.trainingStatus);
   const trainingError = useModelStore((s) => s.trainingError);
+  const visualizationData = useModelStore((s) => s.visualizationData);
   const setSelectedModel = useModelStore((s) => s.setSelectedModel);
   const setModelParam = useModelStore((s) => s.setModelParam);
   const setAutoRetrain = useModelStore((s) => s.setAutoRetrain);
@@ -44,12 +46,10 @@ export default function Step4ModelParameters() {
       const isNetworkError = error === 'Backend is not reachable.'
         || error.includes('not yet supported by the backend');
       if (isNetworkError) {
-        // Fall back to mock results for network errors or unsupported models
         const mock = generateMockResults(selectedModel, currentParams);
         setTrainingResults(mock);
         setTrainingStatus('complete');
       } else {
-        // Backend validation error — show it, block progression
         setTrainingError(error);
         setTrainingStatus('idle');
       }
@@ -151,14 +151,21 @@ export default function Step4ModelParameters() {
         </div>
 
         <div className={styles.rightPanel}>
-          {modelDef && (
+          {/* Show model info card before first training */}
+          {modelDef && trainingStatus !== 'complete' && (
             <div className={styles.infoCard}>
               <h3 className={styles.infoTitle}>{modelDef.fullName}</h3>
               <p className={styles.infoDesc}>{modelDef.description}</p>
             </div>
           )}
 
-          {trainingStatus === 'complete' && (
+          {/* Live visualization panel */}
+          {trainingStatus === 'complete' && visualizationData ? (
+            <div className={styles.vizContainer}>
+              <ModelVisualization data={visualizationData} modelId={selectedModel} />
+            </div>
+          ) : trainingStatus === 'complete' ? (
+            /* Fallback when no visualization data */
             <div className={styles.summaryCard}>
               <h3 className={styles.infoTitle}>Current Configuration</h3>
               <div className={styles.summaryList}>
@@ -176,6 +183,14 @@ export default function Step4ModelParameters() {
                 ))}
               </div>
             </div>
+          ) : (
+            /* Placeholder before training */
+            trainingStatus !== 'training' && (
+              <div className={styles.vizPlaceholder}>
+                <span className={styles.vizPlaceholderIcon}>📊</span>
+                <p>Train a model to see the live visualization</p>
+              </div>
+            )
           )}
         </div>
       </div>

@@ -47,6 +47,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Controls: auto-retrain toggle + train button */
@@ -155,6 +157,37 @@
   font-weight: 600;
   color: var(--color-accent-green);
   font-family: var(--font-mono);
+}
+
+/* Visualization container */
+.vizContainer {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+.vizPlaceholder {
+  background: var(--color-bg-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  gap: 10px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 24px;
+}
+
+.vizPlaceholderIcon {
+  font-size: 32px;
+  opacity: 0.4;
 }
 
 /* Blocked state */

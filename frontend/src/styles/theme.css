@@ -37,3 +37,20 @@
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
 }
+
+[data-theme="light"] {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f6f8fa;
+  --color-bg-tertiary: #eaeef2;
+  --color-bg-card: #ffffff;
+  --color-border: #d0d7de;
+  --color-border-light: #e8ecef;
+
+  --color-text-primary: #1f2328;
+  --color-text-secondary: #57606a;
+  --color-text-muted: #6e7781;
+
+  --shadow-sm: 0 1px 3px rgba(31, 35, 40, 0.12);
+  --shadow-md: 0 4px 12px rgba(31, 35, 40, 0.15);
+  --shadow-lg: 0 8px 24px rgba(31, 35, 40, 0.2);
+}

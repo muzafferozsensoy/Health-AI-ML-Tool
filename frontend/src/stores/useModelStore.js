@@ -16,13 +16,15 @@ const initialState = {
   trainingStatus: 'idle',
   trainingError: null,
   trainingResults: null,
+  visualizationData: null,
   comparisonList: [],
 };
 
 const useModelStore = create((set) => ({
   ...initialState,
 
-  setSelectedModel: (id) => set({ selectedModel: id }),
+  // Switching models clears stale visualization and resets training status
+  setSelectedModel: (id) => set({ selectedModel: id, visualizationData: null, trainingStatus: 'idle', trainingError: null }),
 
   setModelParam: (modelId, key, value) =>
     set((s) => ({
@@ -36,7 +38,10 @@ const useModelStore = create((set) => ({
 
   setTrainingStatus: (status) => set({ trainingStatus: status }),
   setTrainingError: (error) => set({ trainingError: error }),
-  setTrainingResults: (results) => set({ trainingResults: results }),
+  setTrainingResults: (results) => set({
+    trainingResults: results,
+    visualizationData: results?.visualization ?? null,
+  }),
 
   addToComparison: (entry) =>
     set((s) => ({

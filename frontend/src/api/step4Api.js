@@ -1,15 +1,25 @@
 import { apiPost } from './client';
 
-// Only these models are supported by the backend
+// All 6 models mapped to backend IDs
 const MODEL_ID_MAP = {
+  knn: 'knn',
   svm: 'svm',
+  dt: 'decision_tree',
   rf: 'random_forest',
+  lr: 'logistic_regression',
+  nb: 'naive_bayes',
 };
 
 /**
  * Convert frontend param format to what the backend expects.
  */
 function mapParamsForBackend(modelId, params) {
+  if (modelId === 'knn') {
+    return {
+      n_neighbors: params.k,
+      metric: params.distanceMetric,
+    };
+  }
   if (modelId === 'svm') {
     return {
       kernel: params.kernel,
@@ -17,11 +27,29 @@ function mapParamsForBackend(modelId, params) {
       gamma: params.gamma,
     };
   }
+  if (modelId === 'dt') {
+    return {
+      max_depth: params.maxDepth,
+      criterion: params.criterion,
+      min_samples_split: params.minSamplesSplit,
+    };
+  }
   if (modelId === 'rf') {
     return {
       n_estimators: params.nEstimators,
       max_depth: params.maxDepth ?? null,
-      // criterion is not supported by backend — omitted
+    };
+  }
+  if (modelId === 'lr') {
+    return {
+      C: Math.pow(10, params.C), // log-scale exponent, same pattern as SVM
+      solver: params.solver,
+      max_iter: params.maxIter,
+    };
+  }
+  if (modelId === 'nb') {
+    return {
+      var_smoothing: Math.pow(10, params.varSmoothing), // log-scale exponent
     };
   }
   return params;
@@ -72,13 +100,13 @@ function transformResponse(data, frontendModelId, frontendParams) {
     },
     confusionMatrix,
     rocCurve,
+    visualization: data.visualization ?? null,
   };
 }
 
 export async function trainModel(modelId, params) {
   const backendModelId = MODEL_ID_MAP[modelId];
   if (!backendModelId) {
-    // Unsupported model — caller falls back to mock results
     return { data: null, error: `Model '${modelId}' is not yet supported by the backend.` };
   }
 

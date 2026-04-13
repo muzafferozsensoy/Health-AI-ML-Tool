@@ -1,0 +1,444 @@
+.container {
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Header */
+.headerArea {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-accent-green);
+  margin-top: 4px;
+}
+
+.nextBtn {
+  padding: 10px 20px;
+  background: var(--color-accent-green);
+  border: none;
+  border-radius: var(--radius-md);
+  color: #000;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast);
+}
+
+.nextBtn:hover {
+  background: var(--color-accent-green-hover);
+}
+
+/* Locked state */
+.blocked {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.blockedCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  text-align: center;
+  max-width: 400px;
+}
+
+.blockedIcon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.blockedCard h2 {
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.blockedCard p {
+  color: var(--color-text-secondary);
+  margin-bottom: 20px;
+}
+
+.goBackBtn {
+  padding: 10px 20px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+/* Sense-check banner (teal/green) */
+.senseCheckBanner {
+  display: flex;
+  gap: 14px;
+  background: var(--color-accent-green-dim);
+  border: 1px solid var(--color-accent-green-border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.senseCheckIcon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.senseCheckTitle {
+  display: block;
+  color: var(--color-accent-green);
+  font-size: 13px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.senseCheckText {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Caution banner (amber) */
+.cautionBanner {
+  display: flex;
+  gap: 12px;
+  background: var(--color-accent-orange-dim);
+  border: 1px solid rgba(210, 153, 34, 0.4);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--color-text-warning);
+  align-items: flex-start;
+}
+
+.cautionIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* What-If banner (blue) */
+.whatIfBanner {
+  display: flex;
+  gap: 12px;
+  background: rgba(56, 139, 253, 0.1);
+  border: 1px solid rgba(56, 139, 253, 0.35);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #58a6ff;
+  align-items: flex-start;
+}
+
+.whatIfIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Chart Card */
+.chartCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+
+.cardSubtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+/* Feature Importance Bars */
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.featureRow {
+  display: grid;
+  grid-template-columns: 24px 1fr 2fr 52px;
+  align-items: center;
+  gap: 10px;
+}
+
+.featureRank {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-align: right;
+}
+
+.featureName {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.featureBarTrack {
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-pill);
+  height: 8px;
+  overflow: hidden;
+}
+
+.featureBar {
+  height: 100%;
+  background: var(--color-accent-green);
+  border-radius: var(--radius-pill);
+  transition: width 0.4s ease;
+}
+
+.featureValue {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Patient Selector */
+.patientSelectorRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.selectorLabel {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.patientBtns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.patientBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 16px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: all var(--transition-fast);
+  min-width: 130px;
+}
+
+.patientBtn:hover {
+  border-color: var(--color-accent-green);
+}
+
+.patientBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.patientBtnActive {
+  border-color: var(--color-accent-green);
+  background: var(--color-accent-green-dim);
+}
+
+.patientBtnLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.patientBtnInfo {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+/* Prediction Summary */
+.predictionSummary {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.predictionBox {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  min-width: 140px;
+}
+
+.predLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+
+.predValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* Waterfall chart */
+.waterfallList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.waterfallRow {
+  display: grid;
+  grid-template-columns: 1fr 2fr 140px;
+  align-items: center;
+  gap: 12px;
+}
+
+.waterfallLabel {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.waterfallBarTrack {
+  height: 10px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+}
+
+/* Left half — safe bars grow from right to left */
+.waterfallHalfLeft {
+  width: 50%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+/* Right half — risk bars grow from left to right */
+.waterfallHalfRight {
+  width: 50%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+/* Centre divider */
+.waterfallDivider {
+  width: 1px;
+  background: var(--color-border);
+  flex-shrink: 0;
+}
+
+.waterfallBarRisk {
+  height: 100%;
+  background: var(--color-accent-red);
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  transition: width 0.4s ease;
+}
+
+.waterfallBarSafe {
+  height: 100%;
+  background: var(--color-accent-green);
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+  transition: width 0.4s ease;
+}
+
+.waterfallDirection {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Colours */
+.riskText {
+  color: var(--color-accent-red);
+}
+
+.safeText {
+  color: var(--color-accent-green);
+}
+
+/* Loading / Error */
+.loading {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  padding: 16px;
+  text-align: center;
+}
+
+.errorBanner {
+  background: var(--color-accent-red-dim);
+  border: 1px solid rgba(248, 81, 73, 0.4);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--color-accent-red);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.retryBtn {
+  margin-left: auto;
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid var(--color-accent-red);
+  border-radius: var(--radius-sm);
+  color: var(--color-accent-red);
+  font-size: 12px;
+  font-family: var(--font-family);
+  cursor: pointer;
+}

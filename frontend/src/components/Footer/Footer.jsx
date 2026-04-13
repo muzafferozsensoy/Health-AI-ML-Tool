@@ -9,6 +9,7 @@ const stepLabels = {
   3: 'Proceed to Step 4: Model & Parameters',
   4: 'Proceed to Step 5: Results',
   5: 'Proceed to Step 6: Explainability',
+  6: 'Proceed to Step 7: Ethics & Bias',
 };
 
 export default function Footer() {
@@ -22,13 +23,13 @@ export default function Footer() {
   const isStep2NextBlocked = currentStep === 2 && !mapperSaved;
   const isStep3NextBlocked = currentStep === 3 && pipelineStatus !== 'complete';
   const isStep4NextBlocked = currentStep === 4 && trainingStatus !== 'complete';
-  const isStep5NextBlocked = currentStep === 5;
+  const isStep5NextBlocked = currentStep === 5 && trainingStatus !== 'complete';
   const isNextDisabled =
     isStep2NextBlocked ||
     isStep3NextBlocked ||
     isStep4NextBlocked ||
     isStep5NextBlocked ||
-    currentStep > 5;
+    currentStep >= 7;
 
   const label = stepLabels[currentStep] || `Proceed to Step ${currentStep + 1}`;
 
@@ -58,7 +59,7 @@ export default function Footer() {
             </span>
           )}
           {isStep5NextBlocked && (
-            <span className={styles.tooltip}>Coming soon</span>
+            <span className={styles.tooltip}>Train a model before proceeding</span>
           )}
           <button
             className={`${styles.nextBtn} ${isNextDisabled ? styles.disabled : ''}`}
