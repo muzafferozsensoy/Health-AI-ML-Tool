@@ -141,8 +141,8 @@ def get_feature_importance(
     if model is None or X_test is None or y_test is None:
         raise HTTPException(status_code=400, detail="Session data incomplete.")
 
-    # Use domain from request if session doesn't have it
-    if not domain and request.domain:
+    # Always prefer domain from request (user may have changed domain on Step 6)
+    if request.domain:
         domain = request.domain
         session_store.set(x_session_id, "domain", domain)
 
