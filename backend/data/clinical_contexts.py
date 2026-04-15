@@ -296,113 +296,104 @@ DOMAIN_LIST = list(CLINICAL_CONTEXTS.keys())
 
 CLINICAL_SENSE_CHECK = {
     "cardiology": (
-        "Ejection Fraction and Serum Creatinine are the strongest predictors here — "
-        "consistent with clinical evidence that heart failure severity and kidney dysfunction "
-        "together drive 30-day readmission risk. Low ejection fraction indicates the heart "
-        "is pumping inefficiently, while elevated creatinine reflects reduced kidney perfusion."
-    ),
-    "oncology": (
-        "Radius Mean and Texture Mean reflect tumour morphology. Larger, more irregular "
-        "tumours correlate strongly with malignancy in pathology literature. Compactness "
-        "captures the irregularity of cell boundaries — a hallmark of invasive carcinoma."
-    ),
-    "neurology": (
-        "Age and Average Glucose Level are the leading stroke risk factors, consistent with "
-        "global stroke guidelines. Hypertension contributes to vessel damage over time, while "
-        "atrial fibrillation drives cardioembolic stroke. These three features alone account "
-        "for the majority of population-level stroke risk."
-    ),
-    "endocrinology": (
-        "Glucose concentration is the primary diagnostic marker for diabetes mellitus. "
-        "BMI reflects insulin resistance, and elevated insulin levels indicate the pancreas "
-        "is compensating for reduced cellular uptake — a precursor to Type 2 diabetes."
-    ),
-    "pulmonology": (
-        "FEV1 (Forced Expiratory Volume) directly measures airflow obstruction in COPD. "
-        "Prior exacerbation history is the single strongest predictor of future readmission "
-        "in respiratory medicine. Oxygen saturation reflects disease severity at admission."
-    ),
-    "nephrology": (
-        "Creatinine and eGFR are the gold-standard markers of kidney filtration function. "
-        "Elevated blood urea indicates impaired nitrogenous waste excretion. Low albumin "
-        "reflects protein loss through damaged glomeruli — a hallmark of nephrotic syndrome."
-    ),
-    "psychiatry": (
-        "PHQ-9 score is the validated clinical instrument for depression severity and "
-        "naturally dominates the prediction. Sleep disturbance is both a symptom and "
-        "a perpetuating factor in depression, making it a strong secondary predictor."
-    ),
-    "gastroenterology": (
-        "Bilirubin elevation signals impaired hepatic conjugation — a direct marker of liver "
-        "cell damage. Alkaline Phosphatase rises in cholestatic and infiltrative liver disease. "
-        "Albumin falls as synthetic liver function declines, reflecting chronic hepatic injury."
-    ),
-    "rheumatology": (
-        "DAS28 score is the validated composite disease activity measure for rheumatoid "
-        "arthritis. CRP and ESR are acute-phase reactants that rise during active inflammation. "
-        "Tender and swollen joint counts provide direct clinical assessment of flare severity."
-    ),
-    "haematology": (
-        "MCV (Mean Corpuscular Volume) distinguishes microcytic anaemia (iron deficiency) from "
-        "macrocytic anaemia (B12/folate deficiency). Ferritin is the most sensitive marker of "
-        "iron stores. MCHC reflects haemoglobin concentration per red cell, falling in iron deficiency."
-    ),
-    "dermatology": (
-        "Asymmetry Score and Border Irregularity correspond to the A and B criteria of the "
-        "ABCDE dermoscopy rule — both independently validated predictors of melanoma. "
-        "Colour Variation reflects the heterogeneous pigmentation pattern characteristic of "
-        "malignant melanocytes."
-    ),
-    "ophthalmology": (
-        "Microaneurysm Count is the earliest pathological change in diabetic retinopathy, "
-        "caused by weakening of capillary walls. Haemorrhage Count indicates progression to "
-        "more severe stages. HbA1c reflects long-term glycaemic control — the primary "
-        "modifiable risk factor for retinal disease."
-    ),
-    "obstetrics": (
-        "Cervical Length is the strongest ultrasound predictor of preterm birth — a short "
-        "cervix (<25mm) significantly elevates risk. Positive Fibronectin indicates disruption "
-        "of the chorioamniotic interface. Previous preterm birth history doubles recurrence risk."
-    ),
-    "paediatrics": (
-        "Lactate is a direct marker of tissue hypoperfusion — a hallmark of septic shock. "
-        "WBC Count reflects the immune response to bacterial infection. Temperature and Heart "
-        "Rate form part of the paediatric SIRS criteria used in clinical sepsis definitions."
-    ),
-    "emergency_medicine": (
-        "GCS Score directly measures conscious level — low GCS mandates immediate triage. "
-        "Systolic Blood Pressure identifies haemodynamic compromise. Oxygen Saturation below "
-        "94% signals respiratory failure requiring urgent airway or ventilatory support."
-    ),
-    "orthopaedics": (
-        "Age is the strongest independent predictor of post-operative mortality in hip fracture "
-        "patients, reflecting physiological reserve. ASA Grade is the anaesthetist's validated "
-        "pre-operative risk classification. Low Albumin indicates malnutrition, associated with "
-        "impaired wound healing and immune function."
-    ),
-    "infectious_disease": (
-        "Prior Antibiotic Exposure is the leading risk factor for resistance selection — "
-        "consistent with antimicrobial stewardship evidence. Hospital-acquired infections "
-        "are disproportionately caused by resistant organisms. ICU stay concentrates "
-        "resistant pathogens and selects for resistant flora."
+        "LVEF (%), NT-proBNP and Troponin Levels are the top predictors here. "
+        "Low Left Ventricular Ejection Fraction and high NT-proBNP/Troponin are direct "
+        "biomarkers of cardiac muscle damage and pump failure."
     ),
     "radiology": (
-        "Opacity Score quantifies radiographic density changes in the lung parenchyma — "
-        "the key finding in pneumonia. Consolidation represents alveolar filling with "
-        "inflammatory exudate. Pleural Effusion, when combined with consolidation, "
-        "suggests a complicated parapneumonic process."
+        "Lesion Size/Volume, Margin Sharpness and Contrast Enhancement Rate lead the model. "
+        "Irregular margins and rapid contrast enhancement on scans strongly correlate with "
+        "malignant angiogenesis and tumour aggression."
     ),
-    "geriatrics": (
-        "TUG Test Time (Timed Up-and-Go) is the gold-standard clinical balance assessment "
-        "and the strongest falls predictor in older adults. High Medication Count indicates "
-        "polypharmacy — a major modifiable falls risk factor. Previous Falls history is the "
-        "single best predictor of future falls."
+    "nephrology": (
+        "Serum Creatinine, eGFR and Proteinuria are the strongest predictors. "
+        "Declining GFR and protein leakage are the primary, most reliable biochemical markers "
+        "of acute kidney injury and progression to ESRD."
     ),
-    "general_practice": (
-        "Systolic Blood Pressure at baseline directly determines the starting point for "
-        "treatment intensification. Medication Adherence Score is the strongest modifiable "
-        "predictor of BP control. BMI reflects cardiometabolic risk and is associated with "
-        "treatment-resistant hypertension."
+    "oncology": (
+        "TNM Stage, Histological Grade and Metastasis Indicator dominate the model. "
+        "Tumour staging and cellular grade are the most universally validated predictors of "
+        "survival rates, recurrence risk, and treatment response."
+    ),
+    "neurology": (
+        "Cognitive Score (MMSE), Brain Atrophy Volume and Amyloid/Tau Biomarkers are the top features. "
+        "Structural brain changes and specific protein accumulations are the core drivers of "
+        "neurodegenerative decline and dementia progression."
+    ),
+    "endocrinology": (
+        "TSH Levels, Free T4 and Cortisol Levels lead the predictions. "
+        "Severe hormone dysregulation directly impacts systemic metabolic stability, predicting "
+        "crises like thyroid storms or adrenal insufficiency."
+    ),
+    "hepatology": (
+        "AST/ALT Ratio, Serum Bilirubin and MELD Score are the strongest predictors. "
+        "Liver enzyme ratios and bilirubin levels directly quantify hepatocellular injury "
+        "and the liver's remaining detoxifying capacity."
+    ),
+    "cardiology-stroke": (
+        "AFib History, CHA\u2082DS\u2082-VASc Score and Left Atrial Enlargement are the top features. "
+        "Atrial Fibrillation causes blood pooling in the heart's atria, creating cardiogenic "
+        "clots that travel to the brain, risking ischaemic stroke."
+    ),
+    "mental-health": (
+        "PHQ-9 (Depression Score), Previous Crisis Episodes and Medication Adherence dominate. "
+        "Severe symptom severity scores and a history of non-adherence are the strongest "
+        "predictors of acute psychiatric relapse or crisis."
+    ),
+    "diabetes": (
+        "HbA1c Levels, Fasting Blood Glucose and Neuropathy Presence are the top predictors. "
+        "Long-term elevated HbA1c mechanically damages microvasculature, leading directly to "
+        "irreversible complications like neuropathy and retinopathy."
+    ),
+    "pulmonology": (
+        "FEV1/FVC Ratio, O\u2082 Saturation (SpO\u2082) and Smoking Pack-Years lead the model. "
+        "Reduced expiratory volume and chronic hypoxia indicate irreversible airway obstruction, "
+        "strongly predicting COPD exacerbations."
+    ),
+    "sepsis-icu": (
+        "Serum Lactate, SOFA Score and Procalcitonin are the strongest predictors. "
+        "Elevated lactate indicates severe tissue hypoperfusion, while a rising SOFA score "
+        "reflects imminent multi-organ failure."
+    ),
+    "fetal-health": (
+        "Fetal Heart Rate Baseline, Late Decelerations and Uterine Contraction Rate dominate. "
+        "Prolonged decelerations in heart rate during contractions indicate fetal oxygen "
+        "deprivation and acute distress requiring intervention."
+    ),
+    "dermatology": (
+        "Lesion Asymmetry, Colour Variegation and Border Irregularity are the top features. "
+        "Morphological asymmetry and uneven pigmentation (the ABCD rule) are the hallmark "
+        "clinical signs of malignant melanocytes."
+    ),
+    "stroke": (
+        "NIHSS Score at Admission, Time to Thrombolysis and Infarct Volume lead the model. "
+        "Initial neurological deficit severity (NIHSS) and the time elapsed before intervention "
+        "heavily dictate permanent brain damage and recovery."
+    ),
+    "gastroenterology": (
+        "Fecal Calprotectin, CRP Levels and Haemoglobin Drops are the strongest predictors. "
+        "Calprotectin is a highly specific marker for intestinal inflammation (IBD), while "
+        "dropping haemoglobin indicates active gastrointestinal bleeding."
+    ),
+    "orthopedics": (
+        "Joint Space Narrowing, Bone Mineral Density and Pain Severity Score dominate the model. "
+        "Mechanical degradation of cartilage and low bone density directly predict joint failure, "
+        "fracture risk, and the need for arthroplasty."
+    ),
+    "ophthalmology": (
+        "Intraocular Pressure (IOP), Cup-to-Disc Ratio and Macular Thickness are the top features. "
+        "Sustained high intraocular pressure and optic nerve cupping are the fundamental mechanical "
+        "causes of irreversible visual field loss in glaucoma."
+    ),
+    "hematology": (
+        "Blast Cell Count, Platelet Count and Haemoglobin Levels lead the predictions. "
+        "The presence of immature blast cells and severe cytopenias (low platelets/Hb) indicate "
+        "severe bone marrow failure or haematologic malignancy."
+    ),
+    "infectious-disease": (
+        "Viral/Bacterial Load, WBC Count and CRP/ESR are the strongest predictors. "
+        "High pathogen loads coupled with extreme immune responses (WBC and inflammatory markers) "
+        "correlate directly with systemic infectious severity."
     ),
 }
 

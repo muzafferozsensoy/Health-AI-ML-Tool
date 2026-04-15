@@ -42,34 +42,36 @@ export default function Footer() {
           </button>
         )}
         <div className={styles.spacer} />
-        <div className={styles.nextWrapper}>
-          {isStep2NextBlocked && (
-            <span className={styles.tooltip}>
-              Save Column Mapper in Step 2 first
-            </span>
-          )}
-          {isStep3NextBlocked && (
-            <span className={styles.tooltip}>
-              Complete the pipeline before proceeding
-            </span>
-          )}
-          {isStep4NextBlocked && (
-            <span className={styles.tooltip}>
-              Train a model before viewing results
-            </span>
-          )}
-          {isStep5NextBlocked && (
-            <span className={styles.tooltip}>Train a model before proceeding</span>
-          )}
-          <button
-            className={`${styles.nextBtn} ${isNextDisabled ? styles.disabled : ''}`}
-            onClick={isNextDisabled ? undefined : nextStep}
-            disabled={isNextDisabled}
-            aria-label={label}
-          >
-            {label} &rarr;
-          </button>
-        </div>
+        {currentStep < 7 && (
+          <div className={styles.nextWrapper}>
+            {isStep2NextBlocked && (
+              <span className={styles.tooltip}>
+                Save Column Mapper in Step 2 first
+              </span>
+            )}
+            {isStep3NextBlocked && (
+              <span className={styles.tooltip}>
+                Complete the pipeline before proceeding
+              </span>
+            )}
+            {isStep4NextBlocked && (
+              <span className={styles.tooltip}>
+                Train a model before viewing results
+              </span>
+            )}
+            {isStep5NextBlocked && (
+              <span className={styles.tooltip}>Train a model before proceeding</span>
+            )}
+            <button
+              className={`${styles.nextBtn} ${isNextDisabled ? styles.disabled : ''}`}
+              onClick={isNextDisabled ? undefined : nextStep}
+              disabled={isNextDisabled}
+              aria-label={label}
+            >
+              {label} &rarr;
+            </button>
+          </div>
+        )}
       </div>
     </footer>
   );
