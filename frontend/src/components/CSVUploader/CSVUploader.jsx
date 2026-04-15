@@ -109,7 +109,7 @@ export default function CSVUploader() {
         </div>
       )}
 
-      {uploadError && (
+      {uploadError && uploadError !== 'Backend is not reachable.' && (
         <div className={styles.error} role="alert">
           Backend sync failed: {uploadError}
         </div>
