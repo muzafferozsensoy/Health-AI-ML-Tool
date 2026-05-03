@@ -1,4 +1,6 @@
 # main.py
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -21,10 +23,20 @@ app = FastAPI(
     version="0.4.0",
 )
 
-# ── CORS (allow the React/Next dev server) ────────────────────────────────────
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# Origins are read from the CORS_ORIGINS env var (comma-separated). Defaults
+# cover local dev (Vite on :5173, nginx-served frontend on :80). Set this in
+# Render/production to your real frontend domain (e.g. https://*.vercel.app).
+_default_origins = "http://localhost:5173,http://localhost:80"
+_cors_origins = [
+    o.strip()
+    for o in os.getenv("CORS_ORIGINS", _default_origins).split(",")
+    if o.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],          # tighten to your frontend URL in production
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -29,3 +29,50 @@ HEALTH-AI-ML-Tool/
 │
 ├── README.md               # Project overview and repository structure
 └── SETUP.md                # Installation and local setup instructions (Skeleton)
+```
+
+## Quick Start with Docker
+
+The fastest way to run the full stack locally is with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+Once both containers are healthy:
+
+- **Frontend (nginx):** <http://localhost:80>
+- **Backend (FastAPI):** <http://localhost:8000>
+- **API docs (Swagger UI):** <http://localhost:8000/docs>
+
+To stop and remove the containers:
+
+```bash
+docker compose down
+```
+
+## Local Development (without Docker)
+
+See [`SETUP.md`](./SETUP.md) for the Python venv + npm workflow.
+
+## Environment Variables
+
+Each service ships with a `.env.example` documenting the variables it reads. Copy them before customising:
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+| Variable | Service | Purpose |
+|----------|---------|---------|
+| `CORS_ORIGINS` | backend | Comma-separated whitelist of allowed origins |
+| `PYTHONUNBUFFERED` | backend | Stream Python logs immediately |
+| `VITE_API_URL` | frontend | Backend base URL (baked in at Vite build time) |
+
+## Live Deployment
+
+- **Frontend (Vercel):** _add deployed URL here_
+- **Backend (Render):** _add deployed URL here_
+
+The frontend is configured to deploy to Vercel (see `frontend/vercel.json`); the backend ships with `backend/render.yaml` for one-click Render deployment.

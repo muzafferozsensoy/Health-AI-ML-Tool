@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-HEALTH-AI is a full-stack ML visualization tool for healthcare education. It guides users through a 7-step workflow (Clinical Context → Data Exploration → Data Preparation → Model & Params → Results → Explainability → Ethics & Bias) across 10 healthcare domains (Cardiology, Nephrology, Oncology, Neurology, Diabetes, Pulmonology, Sepsis/ICU, Fetal Health, Dermatology, Stroke).
+HEALTH-AI is a full-stack ML visualization tool for healthcare education. It guides users through a 7-step workflow (Clinical Context → Data Exploration → Data Preparation → Model & Params → Results → Explainability → Ethics & Bias) across 20 healthcare domains (Cardiology, Oncology, Neurology, Endocrinology, Pulmonology, Nephrology, Psychiatry, Gastroenterology, Rheumatology, Haematology, Dermatology, Ophthalmology, Obstetrics, Paediatrics, Emergency Medicine, Orthopaedics, Infectious Disease, Radiology, Geriatrics, General Practice). The canonical list lives in `backend/data/clinical_contexts.py`.
 
 **Status:** Early scaffolding phase — architecture and UI designs are finalized but most implementation code is not yet written.
 
