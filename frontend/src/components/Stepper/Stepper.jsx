@@ -18,23 +18,24 @@ export default function Stepper() {
           if (isCompleted) stateClass = styles.completed;
 
           return (
-            <div
+            <button
               key={step.number}
+              type="button"
               className={`${styles.step} ${stateClass}`}
               aria-current={isActive ? 'step' : undefined}
+              aria-label={`Step ${step.number}: ${step.name}${isCompleted ? ' (completed)' : ''}`}
               onClick={() => setStep(step.number)}
-              style={{ cursor: 'pointer' }}
             >
-              <span className={styles.stepNumber}>
+              <span className={styles.stepNumber} aria-hidden="true">
                 {isCompleted ? '\u2713' : step.number}
               </span>
-              <div className={styles.stepText}>
+              <span className={styles.stepText}>
                 <span className={styles.stepName}>
                   {step.number}. {step.name}
                 </span>
                 <span className={styles.stepSubtitle}>{step.subtitle}</span>
-              </div>
-            </div>
+              </span>
+            </button>
           );
         })}
       </div>

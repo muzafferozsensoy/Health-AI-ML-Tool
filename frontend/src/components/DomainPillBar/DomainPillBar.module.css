@@ -74,9 +74,9 @@
 }
 
 .pill.active {
-  background: var(--color-accent-green);
+  background: var(--color-accent-green-solid);
   color: #fff;
-  border-color: var(--color-accent-green);
+  border-color: var(--color-accent-green-solid);
 }
 
 .resetBanner {

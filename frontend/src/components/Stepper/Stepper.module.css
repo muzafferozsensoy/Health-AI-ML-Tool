@@ -25,6 +25,14 @@
   flex-shrink: 0;
   min-width: fit-content;
   transition: all var(--transition-fast);
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.step:hover {
+  filter: brightness(1.08);
 }
 
 .step.active {

@@ -16,7 +16,7 @@
 .logo {
   width: 36px;
   height: 36px;
-  background: var(--color-accent-green);
+  background: var(--color-accent-green-solid);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
@@ -74,7 +74,7 @@
 
 .helpBtn {
   padding: 8px 20px;
-  background: var(--color-accent-green);
+  background: var(--color-accent-green-solid);
   color: #fff;
   border-radius: var(--radius-pill);
   font-size: 14px;
@@ -83,7 +83,7 @@
 }
 
 .helpBtn:hover {
-  background: var(--color-accent-green-hover);
+  background: var(--color-accent-green-solid-hover);
 }
 
 .resetBtn {

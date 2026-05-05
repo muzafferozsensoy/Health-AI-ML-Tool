@@ -38,7 +38,7 @@
 
 .nextBtn {
   padding: 14px 32px;
-  background: var(--color-accent-green);
+  background: var(--color-accent-green-solid);
   color: #fff;
   border-radius: var(--radius-md);
   font-size: 15px;
@@ -47,7 +47,7 @@
 }
 
 .nextBtn:hover:not(.disabled) {
-  background: var(--color-accent-green-hover);
+  background: var(--color-accent-green-solid-hover);
 }
 
 .nextBtn.disabled {

@@ -1,16 +1,43 @@
+import { useEffect, useRef } from 'react';
 import useAppStore from '../../stores/useAppStore';
 import styles from './HelpModal.module.css';
 
 export default function HelpModal() {
   const toggleHelp = useAppStore((s) => s.toggleHelp);
+  const closeBtnRef = useRef(null);
+
+  useEffect(() => {
+    closeBtnRef.current?.focus();
+    const onKey = (e) => {
+      if (e.key === 'Escape') toggleHelp();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [toggleHelp]);
 
   return (
-    <div className={styles.overlay} onClick={toggleHelp}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div
+      className={styles.overlay}
+      onClick={toggleHelp}
+      role="presentation"
+    >
+      <div
+        className={styles.modal}
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="help-modal-title"
+      >
         <div className={styles.header}>
-          <h2>How to Use HEALTH-AI</h2>
-          <button className={styles.closeBtn} onClick={toggleHelp} aria-label="Close help">
-            &times;
+          <h2 id="help-modal-title">How to Use HEALTH-AI</h2>
+          <button
+            ref={closeBtnRef}
+            type="button"
+            className={styles.closeBtn}
+            onClick={toggleHelp}
+            aria-label="Close help"
+          >
+            <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div className={styles.content}>

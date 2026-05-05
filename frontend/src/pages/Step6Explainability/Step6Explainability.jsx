@@ -291,8 +291,12 @@ export default function Step6Explainability() {
         <div className={styles.errorBanner}>
           {importanceError === 'Backend is not reachable.'
             ? '⏳ Backend is starting up — retrying automatically in 5 seconds…'
-            : <><strong>Error:</strong> {importanceError}</>}
-          <button className={styles.retryBtn} onClick={loadFeatureImportance}>Retry now</button>
+            : importanceError.includes('locked')
+              ? '⚠ Backend session expired (server restarted). Please go back to Step 4 and re-train your model.'
+              : <><strong>Error:</strong> {importanceError}</>}
+          {importanceError.includes('locked')
+            ? <button className={styles.retryBtn} onClick={() => setStep(4)}>Go to Step 4</button>
+            : <button className={styles.retryBtn} onClick={loadFeatureImportance}>Retry now</button>}
         </div>
       )}
       {importanceData && !importanceLoading && (

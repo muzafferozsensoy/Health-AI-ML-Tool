@@ -48,10 +48,13 @@ export default function App() {
 
   return (
     <div className={styles.app}>
+      <a href="#main-content" className="skipLink">
+        Skip to main content
+      </a>
       <Header />
       <DomainPillBar />
       <Stepper />
-      <main className={styles.content}>
+      <main id="main-content" className={styles.content} tabIndex="-1">
         <ErrorBoundary key={currentStep}>{renderStep()}</ErrorBoundary>
       </main>
       <Footer />

@@ -41,8 +41,16 @@ export default function ROCCurve({ fpr, tpr, auc }) {
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className={styles.svg}
-        aria-label={`ROC Curve with AUC ${auc}`}
+        role="img"
+        aria-labelledby="roc-title roc-desc"
       >
+        <title id="roc-title">ROC curve</title>
+        <desc id="roc-desc">
+          Receiver operating characteristic curve plotting true positive rate
+          against false positive rate. Area under the curve (AUC) is {auc.toFixed(3)}.
+          The dashed diagonal represents random guessing (AUC = 0.5);
+          curves further from the diagonal indicate better discrimination.
+        </desc>
         {/* Plot background */}
         <rect
           x={PAD}

@@ -15,13 +15,17 @@ export default function ProgressRing({ progress, status, duration }) {
         width={SIZE}
         height={SIZE}
         viewBox={`0 0 ${SIZE} ${SIZE}`}
+        role="img"
+        aria-label={`Pipeline progress: ${progress}% processed`}
       >
+        <title>Pipeline progress {progress}%</title>
         <circle
           className={styles.bgCircle}
           cx={SIZE / 2}
           cy={SIZE / 2}
           r={RADIUS}
           strokeWidth={STROKE}
+          aria-hidden="true"
         />
         <circle
           className={styles.progressCircle}

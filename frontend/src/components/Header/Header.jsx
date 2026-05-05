@@ -15,10 +15,14 @@ export default function Header() {
   };
 
   return (
-    <header className={styles.header}>
+    <header className={styles.header} role="banner">
       <div className={styles.brand}>
-        <div className={styles.logo}>
-          <span className={styles.logoIcon}>+</span>
+        <div
+          className={styles.logo}
+          role="img"
+          aria-label="HEALTH-AI logo"
+        >
+          <span className={styles.logoIcon} aria-hidden="true">+</span>
         </div>
         <div className={styles.title}>
           <span className={styles.titleMain}>HEALTH-AI</span>
@@ -27,13 +31,15 @@ export default function Header() {
       </div>
       <div className={styles.actions}>
         <button
+          type="button"
           className={styles.themeToggle}
           onClick={toggleTheme}
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          aria-pressed={isDark}
           title={isDark ? 'Light mode' : 'Dark mode'}
         >
           {isDark ? (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
               <circle cx="12" cy="12" r="5"/>
               <line x1="12" y1="1" x2="12" y2="3"/>
               <line x1="12" y1="21" x2="12" y2="23"/>
@@ -45,12 +51,13 @@ export default function Header() {
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
             </svg>
           ) : (
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
           )}
         </button>
         <button
+          type="button"
           className={styles.helpBtn}
           onClick={toggleHelp}
           aria-label="Open help"
@@ -58,6 +65,7 @@ export default function Header() {
           Help
         </button>
         <button
+          type="button"
           className={styles.resetBtn}
           onClick={handleReset}
           aria-label="Reset application"

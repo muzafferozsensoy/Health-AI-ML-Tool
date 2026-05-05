@@ -235,6 +235,7 @@ function CaseStudyCard({ study }) {
 
 export default function Step7EthicsAndBias() {
   const selectedDomainId = useAppStore((s) => s.selectedDomainId);
+  const setStep = useAppStore((s) => s.setStep);
   const trainingStatus = useModelStore((s) => s.trainingStatus);
   const trainingResults = useModelStore((s) => s.trainingResults);
 
@@ -365,7 +366,14 @@ export default function Step7EthicsAndBias() {
         {biasLoading && <div className={styles.loading}>Computing subgroup metrics…</div>}
         {biasError && (
           <div className={styles.errorBanner}>
-            <strong>Error:</strong> {biasError}
+            {biasError === 'Backend is not reachable.'
+              ? '⏳ Backend is starting up — please retry in a moment.'
+              : biasError.includes('locked')
+                ? '⚠ Backend session expired (server restarted). Please go back to Step 4 and re-train your model.'
+                : <><strong>Error:</strong> {biasError}</>}
+            {biasError.includes('locked')
+              ? <button className={styles.refreshBtn} onClick={() => setStep(4)}>Go to Step 4</button>
+              : <button className={styles.refreshBtn} onClick={loadBias}>Retry</button>}
           </div>
         )}
         {biasData && !biasLoading && (

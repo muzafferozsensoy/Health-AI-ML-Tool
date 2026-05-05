@@ -69,11 +69,12 @@ export default function DomainPillBar() {
       <div className={styles.scrollArea}>
         {canScrollLeft && (
           <button
+            type="button"
             className={`${styles.arrow} ${styles.arrowLeft}`}
             onClick={() => scroll(-1)}
             aria-label="Scroll domains left"
           >
-            ‹
+            <span aria-hidden="true">‹</span>
           </button>
         )}
 
@@ -86,6 +87,7 @@ export default function DomainPillBar() {
           {domains.map((domain) => (
             <button
               key={domain.id}
+              type="button"
               role="tab"
               aria-selected={selectedDomainId === domain.id}
               className={`${styles.pill} ${selectedDomainId === domain.id ? styles.active : ''}`}
@@ -98,18 +100,19 @@ export default function DomainPillBar() {
 
         {canScrollRight && (
           <button
+            type="button"
             className={`${styles.arrow} ${styles.arrowRight}`}
             onClick={() => scroll(1)}
             aria-label="Scroll domains right"
           >
-            ›
+            <span aria-hidden="true">›</span>
           </button>
         )}
       </div>
 
       {showResetBanner && (
         <div className={styles.resetBanner} role="status" aria-live="polite">
-          <span className={styles.resetIcon}>↻</span>
+          <span className={styles.resetIcon} aria-hidden="true">↻</span>
           Pipeline Reset — All progress has been reset for the new domain.
         </div>
       )}
