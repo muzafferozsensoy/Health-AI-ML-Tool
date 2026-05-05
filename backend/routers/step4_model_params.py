@@ -694,7 +694,9 @@ def train_model(
     _prep(df, target_col, feature_cols, prep_req)
 
     from services.train_service import get_splits
-    X_train, X_test, y_train, y_test = get_splits(df, target_col, feature_cols, prep_req)
+    X_train, X_test, X_train_raw, X_test_raw, y_train, y_test = get_splits(
+        df, target_col, feature_cols, prep_req
+    )
 
     # ── Validate target is categorical ────────────────────────────────────────
     n_unique = len(np.unique(y_train))
@@ -796,6 +798,7 @@ def train_model(
     session_store.set(x_session_id, "model_name", request.model)
     session_store.set(x_session_id, "class_labels", class_labels)
     session_store.set(x_session_id, "X_test", X_test)
+    session_store.set(x_session_id, "X_test_raw", X_test_raw)
     session_store.set(x_session_id, "y_test", y_test)
     session_store.set(x_session_id, "feature_columns", feature_cols)
     session_store.set(x_session_id, "train_complete", True)

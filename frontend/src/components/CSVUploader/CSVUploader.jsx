@@ -48,6 +48,26 @@ export default function CSVUploader() {
     }
   };
 
+  const handleDemo = async () => {
+    const apiBase = import.meta.env.VITE_API_URL || '/api';
+    try {
+      const res = await fetch(`${apiBase}/step2/demo-dataset`);
+      if (!res.ok) throw new Error(`Demo dataset request failed (${res.status})`);
+      const blob = await res.blob();
+      const file = new File([blob], 'heart_disease_demo_bias.csv', { type: 'text/csv' });
+      const parsed = await parseCSV(file);
+      const contentValidation = validateCSVContent(parsed);
+      if (!contentValidation.valid) {
+        setCsvError(contentValidation.error);
+        return;
+      }
+      setCsvData(parsed.data, file.name);
+      syncToBackend(file);
+    } catch (err) {
+      setCsvError(`Failed to load demo dataset: ${err.message}`);
+    }
+  };
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
@@ -83,15 +103,35 @@ export default function CSVUploader() {
   };
 
   return (
-    <div className={styles.wrapper}>
-      <label className={styles.sectionLabel}>CONFIGURATION</label>
+    <div className={styles.wrapper} role="group" aria-label="Dataset source">
+      <span className={styles.sectionLabel} id="csv-config-label">CONFIGURATION</span>
 
-      <button className={styles.defaultBtn} onClick={handleDefault}>
+      <button
+        type="button"
+        className={styles.defaultBtn}
+        onClick={handleDefault}
+        aria-describedby="csv-config-label"
+      >
         Use Default Dataset
       </button>
 
-      <button className={styles.uploadBtn} onClick={handleUploadClick}>
+      <button
+        type="button"
+        className={styles.uploadBtn}
+        onClick={handleUploadClick}
+        aria-describedby="csv-config-label"
+      >
         Upload Your CSV
+      </button>
+
+      <button
+        type="button"
+        className={styles.demoBtn}
+        onClick={handleDemo}
+        aria-describedby="csv-config-label"
+        title="Educational dataset with intentionally introduced bias for fairness analysis"
+      >
+        Load Demo Dataset (Bias Showcase)
       </button>
 
       <input
@@ -101,6 +141,8 @@ export default function CSVUploader() {
         onChange={handleFileChange}
         className={styles.hiddenInput}
         data-testid="csv-file-input"
+        aria-label="CSV file"
+        tabIndex="-1"
       />
 
       {csvError && (

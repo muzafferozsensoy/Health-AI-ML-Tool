@@ -49,6 +49,10 @@ def get_splits(
                 mode = work[col].mode()
                 work[col] = work[col].fillna(mode.iloc[0] if not mode.empty else "unknown")
 
+    # Snapshot of post-imputation, pre-scaling values for downstream demographic
+    # analysis (Step 7 needs raw ages/sex to bin correctly).
+    work_pre_scale = work.copy()
+
     # Normalise
     numeric_feature_cols = [
         c for c in work[feature_cols].select_dtypes(include="number").columns
@@ -62,18 +66,19 @@ def get_splits(
 
     # Split
     X = work[feature_cols].values
+    X_raw = work_pre_scale[feature_cols].values
     y = work[target_col].values
 
     unique_classes, class_counts = np.unique(y, return_counts=True)
     can_stratify = len(unique_classes) > 1 and all(c >= 2 for c in class_counts)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y,
+    X_train, X_test, X_train_raw, X_test_raw, y_train, y_test = train_test_split(
+        X, X_raw, y,
         test_size=request.test_size,
         random_state=request.random_state,
         stratify=y if can_stratify else None,
     )
 
-    # SMOTE (training set only)
+    # SMOTE (training set only) — operates on scaled X_train; raw copy untouched
     if request.apply_smote:
         try:
             from imblearn.over_sampling import SMOTE
@@ -82,4 +87,4 @@ def get_splits(
         except Exception:
             pass
 
-    return X_train, X_test, y_train, y_test
+    return X_train, X_test, X_train_raw, X_test_raw, y_train, y_test

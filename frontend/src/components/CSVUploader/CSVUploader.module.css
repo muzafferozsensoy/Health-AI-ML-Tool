@@ -44,6 +44,23 @@
   border-color: var(--color-text-secondary);
 }
 
+.demoBtn {
+  padding: 12px;
+  background: transparent;
+  color: #d29922;
+  border: 1px dashed #d29922;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.demoBtn:hover {
+  background: rgba(210, 153, 34, 0.08);
+  border-style: solid;
+}
+
 .hiddenInput {
   display: none;
 }

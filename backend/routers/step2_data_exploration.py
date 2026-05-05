@@ -1,7 +1,9 @@
 # routers/step2_data_exploration.py
 import uuid
+from pathlib import Path
 import pandas as pd
 from fastapi import APIRouter, UploadFile, File, HTTPException, Header
+from fastapi.responses import FileResponse
 from typing import Optional
 
 from services import session_store
@@ -148,3 +150,26 @@ def check_schema_status(x_session_id: str = Header(...)):
             else "Please complete the Column Mapper before proceeding to Step 3."
         ),
     }
+
+
+# ── Demo dataset endpoint ─────────────────────────────────────────────────────
+
+@router.get(
+    "/demo-dataset",
+    summary="Download a small heart-disease dataset with intentionally introduced bias",
+)
+def get_demo_dataset():
+    """
+    Serves a manipulated CSV where ~70% of female patients aged >=60 have
+    flipped heart_disease labels. Used by the frontend "Load Demo Dataset
+    (Bias Showcase)" button to guarantee Step 7 fairness analysis surfaces
+    a red bias badge for educational demos.
+    """
+    path = Path(__file__).resolve().parent.parent / "data" / "samples" / "heart_disease_demo_bias.csv"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Demo dataset not found.")
+    return FileResponse(
+        path,
+        media_type="text/csv",
+        filename="heart_disease_demo_bias.csv",
+    )

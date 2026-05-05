@@ -72,54 +72,61 @@ def _sensitivity_specificity(y_true, y_pred, pos_label):
     return round(sensitivity, 4), round(specificity, 4)
 
 
-def _find_demographic_column(feature_cols: list, X_test: np.ndarray):
-    """Detect age or sex/gender column. Returns (col_name, col_idx) or (None, None)."""
-    priority = ["age", "sex", "gender", "age_group"]
-    for keyword in priority:
-        for i, col in enumerate(feature_cols):
-            if col.lower() == keyword:
-                return col, i
-    # Partial match
-    for keyword in ["age", "sex", "gender"]:
-        for i, col in enumerate(feature_cols):
-            if keyword in col.lower():
-                return col, i
-    return None, None
+def _find_demographic_columns(feature_cols: list):
+    """Locate age and sex/gender column indices. Returns (age_idx, sex_idx)."""
+    age_idx = sex_idx = None
+    # Exact-match priority pass
+    for i, col in enumerate(feature_cols):
+        cl = col.lower()
+        if age_idx is None and cl in ("age", "age_group"):
+            age_idx = i
+        elif sex_idx is None and cl in ("sex", "gender"):
+            sex_idx = i
+    # Partial-match fallback
+    for i, col in enumerate(feature_cols):
+        cl = col.lower()
+        if age_idx is None and "age" in cl:
+            age_idx = i
+        elif sex_idx is None and ("sex" in cl or "gender" in cl):
+            sex_idx = i
+    return age_idx, sex_idx
 
 
-def _build_subgroups(feature_cols, X_test, y_true, y_pred, class_labels):
+def _build_subgroups(feature_cols, X_demo, y_true, y_pred, class_labels):
     """
     Return a list of (name, mask) pairs defining demographic subgroups.
-    Detects age or sex columns; falls back to synthetic quartile splits.
+    X_demo must contain RAW (pre-scaling) feature values so age thresholds
+    like 40/65 are meaningful. Detects age and/or sex; falls back to a
+    synthetic median split when neither column is present.
     """
-    col_name, col_idx = _find_demographic_column(feature_cols, X_test)
+    age_idx, sex_idx = _find_demographic_columns(feature_cols)
     subgroups = []
 
-    if col_name is not None:
-        values = X_test[:, col_idx]
-        col_lower = col_name.lower()
+    if age_idx is not None:
+        ages = X_demo[:, age_idx]
+        subgroups += [
+            ("Young (Age < 40)", ages < 40),
+            ("Middle (Age 40–65)", (ages >= 40) & (ages <= 65)),
+            ("Senior (Age > 65)", ages > 65),
+        ]
 
-        if "age" in col_lower:
-            subgroups = [
-                ("Young (Age < 40)", values < 40),
-                ("Middle (Age 40–65)", (values >= 40) & (values <= 65)),
-                ("Senior (Age > 65)", values > 65),
+    if sex_idx is not None:
+        sex_vals = X_demo[:, sex_idx]
+        unique_vals = np.unique(sex_vals)
+        if len(unique_vals) == 2:
+            # UCI heart-disease convention: 0 = female, 1 = male
+            lo, hi = sorted(unique_vals.tolist())
+            subgroups += [
+                (f"Female (sex={lo})", sex_vals == lo),
+                (f"Male (sex={hi})", sex_vals == hi),
             ]
-        elif col_lower in ("sex", "gender"):
-            # Assume 0/1 encoding or low cardinality
-            unique_vals = np.unique(values)
-            if len(unique_vals) == 2:
-                subgroups = [
-                    ("Group A (code 0)", values == unique_vals[0]),
-                    ("Group B (code 1)", values == unique_vals[1]),
-                ]
-            else:
-                for v in unique_vals[:4]:
-                    subgroups.append((f"Group {v}", values == v))
+        else:
+            for v in unique_vals[:4]:
+                subgroups.append((f"Sex={v}", sex_vals == v))
 
     if not subgroups:
-        # Synthetic: split on median of the first feature
-        ref_vals = X_test[:, 0]
+        # Synthetic fallback: split on median of the first feature
+        ref_vals = X_demo[:, 0]
         median = np.median(ref_vals)
         subgroups = [
             ("Lower Half", ref_vals <= median),
@@ -141,11 +148,16 @@ def get_bias_analysis(x_session_id: str = Header(...)):
     model = session.get("trained_model")
     feature_cols = list(session.get("feature_columns", []))
     X_test = session.get("X_test")
+    X_test_raw = session.get("X_test_raw")
     y_test = session.get("y_test")
     class_labels = session.get("class_labels", [])
 
     if model is None or X_test is None or y_test is None:
         raise HTTPException(status_code=400, detail="Session data incomplete.")
+
+    # Fall back to scaled X_test for legacy sessions trained before the raw
+    # snapshot was added — bins will be wrong but the endpoint still responds.
+    X_demo = X_test_raw if X_test_raw is not None else X_test
 
     y_pred = model.predict(X_test)
     y_test_arr = np.array(y_test)
@@ -159,8 +171,8 @@ def get_bias_analysis(x_session_id: str = Header(...)):
     # Overall sensitivity
     overall_sens, overall_spec = _sensitivity_specificity(y_test_arr, y_pred, pos_label)
 
-    # Subgroup analysis
-    raw_subgroups = _build_subgroups(feature_cols, X_test, y_test_arr, y_pred, class_labels)
+    # Subgroup analysis (binning uses raw values, prediction already uses scaled)
+    raw_subgroups = _build_subgroups(feature_cols, X_demo, y_test_arr, y_pred, class_labels)
 
     result_subgroups = []
     bias_detected = False
@@ -212,61 +224,51 @@ def get_population_comparison(x_session_id: str = Header(...)):
 
     domain = session.get("domain", "")
     X_test = session.get("X_test")
+    X_test_raw = session.get("X_test_raw")
     feature_cols = list(session.get("feature_columns", []))
+
+    # Use raw values for binning; fall back to scaled X_test for legacy sessions
+    X_demo = X_test_raw if X_test_raw is not None else X_test
 
     ref = _POPULATION_REFERENCE.get(domain, _DEFAULT_POPULATION)
 
-    # Estimate training percentages from X_test (proxy for training distribution)
-    col_name, col_idx = _find_demographic_column(feature_cols, X_test if X_test is not None else np.array([]))
+    age_idx, sex_idx = _find_demographic_columns(feature_cols)
 
     training_dist = {}
-    if col_idx is not None and X_test is not None and len(X_test) > 0:
-        values = X_test[:, col_idx]
-        col_lower = col_name.lower()
-        if "age" in col_lower:
-            n = len(values)
-            # Match buckets to reference if possible
-            ref_keys = list(ref.keys())
-            age_keys = [k for k in ref_keys if "age" in k.lower() or "< " in k or "–" in k]
-            if domain == "obstetrics":
-                training_dist = {
-                    "Age < 30": round(100 * np.mean(values < 30), 1),
-                    "Age 30–35": round(100 * np.mean((values >= 30) & (values <= 35)), 1),
-                    "Age > 35": round(100 * np.mean(values > 35), 1),
-                }
-            elif domain == "paediatrics":
-                training_dist = {
-                    "Age 0–5": round(100 * np.mean(values <= 5), 1),
-                    "Age 6–12": round(100 * np.mean((values > 5) & (values <= 12)), 1),
-                    "Age 13–18": round(100 * np.mean(values > 12), 1),
-                }
-            elif domain == "geriatrics":
-                training_dist = {
-                    "Age < 75": round(100 * np.mean(values < 75), 1),
-                    "Age 75–85": round(100 * np.mean((values >= 75) & (values <= 85)), 1),
-                    "Age > 85": round(100 * np.mean(values > 85), 1),
-                }
-            else:
-                training_dist = {
-                    "Age < 50": round(100 * np.mean(values < 50), 1),
-                    "Age 50–65": round(100 * np.mean((values >= 50) & (values <= 65)), 1),
-                    "Age > 65": round(100 * np.mean(values > 65), 1),
-                }
+    if age_idx is not None and X_demo is not None and len(X_demo) > 0:
+        values = X_demo[:, age_idx]
+        if domain == "obstetrics":
+            training_dist = {
+                "Age < 30": round(100 * np.mean(values < 30), 1),
+                "Age 30–35": round(100 * np.mean((values >= 30) & (values <= 35)), 1),
+                "Age > 35": round(100 * np.mean(values > 35), 1),
+            }
+        elif domain == "paediatrics":
+            training_dist = {
+                "Age 0–5": round(100 * np.mean(values <= 5), 1),
+                "Age 6–12": round(100 * np.mean((values > 5) & (values <= 12)), 1),
+                "Age 13–18": round(100 * np.mean(values > 12), 1),
+            }
+        elif domain == "geriatrics":
+            training_dist = {
+                "Age < 75": round(100 * np.mean(values < 75), 1),
+                "Age 75–85": round(100 * np.mean((values >= 75) & (values <= 85)), 1),
+                "Age > 85": round(100 * np.mean(values > 85), 1),
+            }
+        else:
+            training_dist = {
+                "Age < 50": round(100 * np.mean(values < 50), 1),
+                "Age 50–65": round(100 * np.mean((values >= 50) & (values <= 65)), 1),
+                "Age > 65": round(100 * np.mean(values > 65), 1),
+            }
 
-    # For sex column detection
-    sex_col_name, sex_col_idx = None, None
-    for keyword in ["sex", "gender"]:
-        for i, col in enumerate(feature_cols):
-            if keyword in col.lower():
-                sex_col_name, sex_col_idx = col, i
-                break
-
-    if sex_col_idx is not None and X_test is not None and len(X_test) > 0:
-        sex_vals = X_test[:, sex_col_idx]
+    if sex_idx is not None and X_demo is not None and len(X_demo) > 0:
+        sex_vals = X_demo[:, sex_idx]
         unique_sex = np.unique(sex_vals)
         if len(unique_sex) == 2:
-            training_dist["Female"] = round(100 * np.mean(sex_vals == unique_sex[0]), 1)
-            training_dist["Male"] = round(100 * np.mean(sex_vals == unique_sex[1]), 1)
+            lo, hi = sorted(unique_sex.tolist())
+            training_dist["Female"] = round(100 * np.mean(sex_vals == lo), 1)
+            training_dist["Male"] = round(100 * np.mean(sex_vals == hi), 1)
 
     # If we couldn't derive real distributions, use slight perturbation of reference
     if not training_dist:
